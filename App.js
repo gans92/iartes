@@ -32,9 +32,24 @@ function headerOptions(cor, titulo) {
   };
 }
 
+const linking = {
+  prefixes: [],
+  config: {
+    screens: {
+      Home: '',
+      Calculadoras: 'calculadoras',
+      Sobre: 'sobre',
+      FuncaoRenal: 'funcao-renal',
+      GravidadePneumonia: 'gravidade-pneumonia',
+      EscoreGlasgow: 'escore-glasgow',
+      DisturbiosAcidoBase: 'disturbios-acido-base',
+    },
+  },
+};
+
 function AppNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <StatusBar barStyle="light-content" backgroundColor={CORES.roxo} />
       <Stack.Navigator
         screenOptions={{
