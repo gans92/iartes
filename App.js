@@ -13,6 +13,7 @@ import DisturbiosAcidoBaseScreen from './screens/DisturbiosAcidoBaseScreen';
 import IdadeGestacionalScreen from './screens/IdadeGestacionalScreen';
 import RiscoCardiovascularScreen from './screens/RiscoCardiovascularScreen';
 import MrpaGlicemiaScreen from './screens/MrpaGlicemiaScreen';
+import PosologiaScreen from './screens/PosologiaScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -112,6 +113,11 @@ function AppNavigator() {
           name="MrpaGlicemia"
           component={MrpaGlicemiaScreen}
           options={headerOptions(CORES.azul, 'Monitorização da Pressão Arterial')}
+        />
+        <Stack.Screen
+          name="Posologia"
+          component={PosologiaScreen}
+          options={headerOptions(CORES.azul, 'Posologia de Medicamentos')}
         />
       </Stack.Navigator>
     </NavigationContainer>

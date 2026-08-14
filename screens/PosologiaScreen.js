@@ -23,8 +23,8 @@ const normalizeText = (text) => {
 export default function PosologiaScreen() {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Transforma as receitas agrupadas em itens individuais,
-  // converte o nome para MAIÚSCULAS e ordena de A a Z.
+  // Transforma a lista de receitas agrupadas em uma lista individual de medicamentos/itens
+  // e já aplica a ordenação ALFABÉTICA pelo nome do medicamento
   const todosOsMedicamentos = useMemo(() => {
     const lista = [];
     RECEITAS.forEach((receita) => {
@@ -32,7 +32,6 @@ export default function PosologiaScreen() {
         receita.itens.forEach((item, index) => {
           lista.push({
             ...item,
-            nomeExibicao: item.nome ? item.nome.toUpperCase() : '', // <--- NOME EM MAIÚSCULAS
             idUnico: `${receita.id}-${index}`,
             protocoloTitulo: receita.titulo,
             protocoloContexto: receita.contexto,
@@ -41,19 +40,19 @@ export default function PosologiaScreen() {
       }
     });
 
-    // Ordenação alfabética (A-Z)
+    // Ordenação alfabética (A-Z) considerando acentos
     return lista.sort((a, b) =>
-      (a.nomeExibicao || '').localeCompare(b.nomeExibicao || '', 'pt-BR', { sensitivity: 'base' })
+      (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' })
     );
   }, []);
 
-  // Filtro inteligente
+  // Filtro inteligente mantendo a ordem alfabética
   const medicamentosFiltrados = useMemo(() => {
     const query = normalizeText(searchQuery.trim());
     if (!query) return todosOsMedicamentos;
 
     return todosOsMedicamentos.filter((med) => {
-      const nomeMatch = normalizeText(med.nomeExibicao).includes(query);
+      const nomeMatch = normalizeText(med.nome).includes(query);
       const posologiaMatch = normalizeText(med.posologia).includes(query);
       const protocoloMatch = normalizeText(med.protocoloTitulo).includes(query);
       const contextoMatch = normalizeText(med.protocoloContexto).includes(query);
@@ -65,8 +64,7 @@ export default function PosologiaScreen() {
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      {/* Exibição em caixa alta: ex = ACIDO VALPROICO - 250 MG */}
-      <Text style={styles.medNome}>{item.nomeExibicao}</Text>
+      <Text style={styles.medNome}>{item.nome}</Text>
 
       <View style={styles.row}>
         <Text style={styles.label}>Via: </Text>
