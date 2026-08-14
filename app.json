@@ -24,8 +24,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "output": "static",
-      "baseUrl": "/iartes"
+      "bundler": "metro"
     }
   }
 }

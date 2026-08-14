@@ -37,10 +37,10 @@ function headerOptions(cor, titulo) {
 }
 
 const linking = {
-  prefixes: ['https://gans92.github.io/iartes'],
+  prefixes: ['https://gans92.github.io/iartes', 'http://localhost:19006'],
   config: {
     screens: {
-      Home: 'iartes',
+      Home: '', // Raiz exata do site (gans92.github.io/iartes/)
       Calculadoras: 'calculadoras',
       Sobre: 'sobre',
       FuncaoRenal: 'funcao-renal',
@@ -50,6 +50,7 @@ const linking = {
       RiscoCardiovascular: 'risco-cardiovascular',
       IdadeGestacional: 'idade-gestacional',
       MrpaGlicemia: 'mrpa-glicemia',
+      Posologia: 'posologia',
     },
   },
 };
@@ -59,6 +60,7 @@ function AppNavigator() {
     <NavigationContainer linking={linking}>
       <StatusBar barStyle="light-content" backgroundColor={CORES.roxo} />
       <Stack.Navigator
+        initialRouteName="Home"
         screenOptions={{
           headerBackTitleVisible: false,
           animation: 'slide_from_right',
