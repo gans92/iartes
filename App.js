@@ -40,7 +40,7 @@ const linking = {
   prefixes: ['https://gans92.github.io/iartes', 'http://localhost:19006'],
   config: {
     screens: {
-      Home: '', // Raiz exata do site (gans92.github.io/iartes/)
+      Home: 'iartes', // Raiz exata do site (gans92.github.io/iartes/)
       Calculadoras: 'calculadoras',
       Sobre: 'sobre',
       FuncaoRenal: 'funcao-renal',
