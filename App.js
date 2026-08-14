@@ -1,5 +1,5 @@
-import { StatusBar } from 'react-native';
-import { View, Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import { StatusBar, View, Platform, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -10,6 +10,9 @@ import FuncaoRenalScreen from './screens/FuncaoRenalScreen';
 import GravidadePneumoniaScreen from './screens/GravidadePneumoniaScreen';
 import EscoreGlasgowScreen from './screens/EscoreGlasgowScreen';
 import DisturbiosAcidoBaseScreen from './screens/DisturbiosAcidoBaseScreen';
+import IdadeGestacionalScreen from './screens/IdadeGestacionalScreen';
+import RiscoCardiovascularScreen from './screens/RiscoCardiovascularScreen';
+import MrpaGlicemiaScreen from './screens/MrpaGlicemiaScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,16 +36,19 @@ function headerOptions(cor, titulo) {
 }
 
 const linking = {
-  prefixes: [],
+  prefixes: ['https://gans92.github.io/iartes'],
   config: {
     screens: {
-      Home: '',
+      Home: 'iartes',
       Calculadoras: 'calculadoras',
       Sobre: 'sobre',
       FuncaoRenal: 'funcao-renal',
       GravidadePneumonia: 'gravidade-pneumonia',
       EscoreGlasgow: 'escore-glasgow',
       DisturbiosAcidoBase: 'disturbios-acido-base',
+      RiscoCardiovascular: 'risco-cardiovascular',
+      IdadeGestacional: 'idade-gestacional',
+      MrpaGlicemia: 'mrpa-glicemia',
     },
   },
 };
@@ -92,6 +98,21 @@ function AppNavigator() {
           component={DisturbiosAcidoBaseScreen}
           options={headerOptions(CORES.verde, 'Distúrbios Ácido-Base')}
         />
+        <Stack.Screen
+          name="IdadeGestacional"
+          component={IdadeGestacionalScreen}
+          options={headerOptions(CORES.verde, 'Idade Gestacional')}
+        />
+        <Stack.Screen
+          name="RiscoCardiovascular"
+          component={RiscoCardiovascularScreen}
+          options={headerOptions(CORES.vermelho, 'Risco Cardiovascular')}
+        />
+        <Stack.Screen
+          name="MrpaGlicemia"
+          component={MrpaGlicemiaScreen}
+          options={headerOptions(CORES.azul, 'Monitorização da Pressão Arterial')}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -127,6 +148,10 @@ const styles = StyleSheet.create({
     maxHeight: 900,
     backgroundColor: '#fff',
     overflow: 'hidden',
-    boxShadow: '0 0 40px rgba(0,0,0,0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 10,
   },
 });

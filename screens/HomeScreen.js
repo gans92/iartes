@@ -21,6 +21,15 @@ const MENU_ITEMS = [
     screen: 'Calculadoras',
   },
   {
+    id: '3',
+    label: 'Monitorização da Pressão Arterial',
+    subtitle: 'Gerar formulário para impressão',
+    icon: 'print-outline',
+    color: '#1a6fb0',
+    bg: '#e3f2fd',
+    screen: 'MrpaGlicemia',
+  },
+  {
     id: '2',
     label: 'Sobre',
     subtitle: 'Informações do aplicativo',

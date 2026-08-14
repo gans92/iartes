@@ -46,6 +46,24 @@ const CALCULADORAS = [
     bg: '#e2f5ec',
     screen: 'DisturbiosAcidoBase',
   },
+  {
+    id: '5',
+    label: 'Idade Gestacional',
+    subtitle: 'IG e data provável do parto',
+    icon: 'calendar-outline',
+    color: '#6a1fb0',
+    bg: '#efe4fb',
+    screen: 'IdadeGestacional',
+  },
+  {
+    id: '6',
+    label: 'Risco Cardiovascular',
+    subtitle: 'Escore de Framingham (ERG)',
+    icon: 'heart-outline',
+    color: '#b0245c',
+    bg: '#fbe4ee',
+    screen: 'RiscoCardiovascular',
+  },
 ];
 
 export default function CalculadorasScreen({ navigation }) {
