@@ -104,7 +104,7 @@ function AppNavigator() {
         <Stack.Screen
           name="IdadeGestacional"
           component={IdadeGestacionalScreen}
-          options={headerOptions(CORES.verde, 'Idade Gestacional')}
+          options={headerOptions(CORES.roxo, 'Idade Gestacional')}
         />
         <Stack.Screen
           name="RiscoCardiovascular"

@@ -136,7 +136,7 @@ export default function MrpaGlicemiaScreen() {
             <div>DATA: ____/____/________</div>
             <div class="assinatura-box">
               <div class="linha-assinatura"></div>
-              Médica
+              Médico(a)
             </div>
           </div>
         </body>

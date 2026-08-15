@@ -413,7 +413,7 @@ export default function RiscoCardiovascularScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.titulo}>Risco Cardiovascular</Text>
@@ -476,7 +476,7 @@ export default function RiscoCardiovascularScreen() {
       <Toggle label="Tabagista atual?" value={tabagismo} onChange={(v) => { setTabagismo(v); setResultado(null); }} />
       <Toggle label="Diabetes mellitus?" value={diabetes} onChange={(v) => { setDiabetes(v); setResultado(null); }} />
 
-      <TouchableOpacity style={[styles.botao, { backgroundColor: COR_TELA }]} onPress={calcular}>
+      <TouchableOpacity style={[styles.botao, { backgroundColor: COR_TELA, minHeight: 50, justifyContent: 'center' }]} onPress={calcular}>
         <Text style={styles.botaoTexto}>Calcular Risco</Text>
       </TouchableOpacity>
 
