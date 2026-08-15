@@ -1,263 +1,181 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import {
+  SafeAreaView,
   StyleSheet,
   Text,
   View,
-  TextInput,
-  FlatList,
   TouchableOpacity,
-  SafeAreaView,
+  ScrollView,
   StatusBar,
 } from 'react-native';
-import { RECEITAS } from './ReceitasData';
+import { Ionicons } from '@expo/vector-icons';
 
-// Função auxiliar para remover acentos e caracteres especiais
-const normalizeText = (text) => {
-  if (!text) return '';
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-};
+const MENU_ITEMS = [
+  {
+    id: '1',
+    label: 'Calculadoras',
+    subtitle: 'Ferramentas clínicas rápidas',
+    icon: 'calculator-outline',
+    color: '#6a1fb0',
+    bg: '#efe4fb',
+    screen: 'Calculadoras',
+  },
+  {
+    id: '2',
+    label: 'Posologias',
+    subtitle: 'Medicações e doses recomendadas',
+    icon: 'medkit-outline',
+    color: '#ff6b6b',
+    bg: '#ffebee',
+    screen: 'Posologia',
+  },
+  {
+    id: '3',
+    label: 'Monitorização da Pressão Arterial',
+    subtitle: 'Gerar formulário para impressão',
+    icon: 'print-outline',
+    color: '#1a6fb0',
+    bg: '#e3f2fd',
+    screen: 'MrpaGlicemia',
+  },
+  {
+    id: '4',
+    label: 'Sobre',
+    subtitle: 'Informações do aplicativo',
+    icon: 'information-circle-outline',
+    color: '#1f7a5c',
+    bg: '#e2f5ec',
+    screen: 'Sobre',
+  },
+];
 
-export default function PosologiaScreen() {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Transforma as receitas agrupadas em itens individuais,
-  // converte o nome para MAIÚSCULAS e ordena de A a Z.
-  const todosOsMedicamentos = useMemo(() => {
-    const lista = [];
-    RECEITAS.forEach((receita) => {
-      if (receita.itens && receita.itens.length > 0) {
-        receita.itens.forEach((item, index) => {
-          lista.push({
-            ...item,
-            nomeExibicao: item.nome ? item.nome.toUpperCase() : '', // <--- NOME EM MAIÚSCULAS
-            idUnico: `${receita.id}-${index}`,
-            protocoloTitulo: receita.titulo,
-            protocoloContexto: receita.contexto,
-          });
-        });
-      }
-    });
-
-    // Ordenação alfabética (A-Z)
-    return lista.sort((a, b) =>
-      (a.nomeExibicao || '').localeCompare(b.nomeExibicao || '', 'pt-BR', { sensitivity: 'base' })
-    );
-  }, []);
-
-  // Filtro inteligente
-  const medicamentosFiltrados = useMemo(() => {
-    const query = normalizeText(searchQuery.trim());
-    if (!query) return todosOsMedicamentos;
-
-    return todosOsMedicamentos.filter((med) => {
-      const nomeMatch = normalizeText(med.nomeExibicao).includes(query);
-      const posologiaMatch = normalizeText(med.posologia).includes(query);
-      const protocoloMatch = normalizeText(med.protocoloTitulo).includes(query);
-      const contextoMatch = normalizeText(med.protocoloContexto).includes(query);
-      const obsMatch = normalizeText(med.obs).includes(query);
-
-      return nomeMatch || posologiaMatch || protocoloMatch || contextoMatch || obsMatch;
-    });
-  }, [searchQuery, todosOsMedicamentos]);
-
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      {/* Exibição em caixa alta: ex = ACIDO VALPROICO - 250 MG */}
-      <Text style={styles.medNome}>{item.nomeExibicao}</Text>
-
-      <View style={styles.row}>
-        <Text style={styles.label}>Via: </Text>
-        <Text style={styles.value}>{item.via || 'VO'}</Text>
-      </View>
-
-      <View style={styles.row}>
-        <Text style={styles.label}>Quantidade: </Text>
-        <Text style={styles.value}>{item.quantidade}</Text>
-      </View>
-
-      <View style={styles.row}>
-        <Text style={styles.label}>Posologia: </Text>
-        <Text style={styles.value}>{item.posologia}</Text>
-      </View>
-
-      <View style={styles.row}>
-        <Text style={styles.label}>Controlado: </Text>
-        <Text style={styles.value}>{item.controlado ? 'Sim' : 'Não'}</Text>
-      </View>
-
-      <View style={styles.row}>
-        <Text style={styles.label}>Unidade: </Text>
-        <Text style={styles.value}>{item.unidade || 'CPR'}</Text>
-      </View>
-
-      {item.protocoloTitulo && (
-        <View style={styles.footerProtocolo}>
-          <Text style={styles.protocoloText}>
-            ⓘ Protocolo: {item.protocoloTitulo}
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-
+export default function HomeScreen({ navigation }) {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#4b1585" />
 
-      <View style={styles.content}>
-        <Text style={styles.mainTitle}>Doses Rápidas & Posologia</Text>
-        <Text style={styles.subtitle}>
-          {medicamentosFiltrados.length} medicamentos disponíveis
-        </Text>
-
-        {/* Campo de Busca */}
-        <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar por remédio ou doença (ex: insonia)..."
-            placeholderTextColor="#888"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={styles.clearIcon}>✕</Text>
-            </TouchableOpacity>
-          )}
+      {/* Cabeçalho de destaque */}
+      <View style={styles.hero}>
+        <View style={styles.heroIconWrap}>
+          <Ionicons name="medkit-outline" size={30} color="#fff" />
         </View>
-
-        {/* Lista de Resultados */}
-        <FlatList
-          data={medicamentosFiltrados}
-          keyExtractor={(item) => item.idUnico}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>⚠️</Text>
-              <Text style={styles.emptyText}>
-                Nenhum medicamento encontrado para "{searchQuery}".
-              </Text>
-            </View>
-          }
-        />
+        <Text style={styles.heroTitle}>CALC MED</Text>
+        <Text style={styles.heroSubtitle}>Calculadoras médicas na palma da mão</Text>
       </View>
+
+      <ScrollView
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {MENU_ITEMS.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.card}
+            activeOpacity={0.75}
+            onPress={() => item.screen && navigation.navigate(item.screen)}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: item.bg }]}>
+              <Ionicons name={item.icon} size={26} color={item.color} />
+            </View>
+            <View style={styles.cardTextWrap}>
+              <Text style={styles.cardTitle}>{item.label}</Text>
+              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color="#c4c4c4" />
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#f4f2f7',
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+  hero: {
+    backgroundColor: '#4b1585',
+    paddingTop: 28,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
-  mainTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A237E',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#757575',
-    marginBottom: 12,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECEFF1',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 44,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#CFD8DC',
-  },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: '#263238',
-  },
-  clearIcon: {
-    fontSize: 16,
-    color: '#78909C',
-    padding: 4,
-  },
-  listContainer: {
-    paddingBottom: 24,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  medNome: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#263238',
-    marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    marginBottom: 4,
-    flexWrap: 'wrap',
-  },
-  label: {
-    fontWeight: 'bold',
-    color: '#37474F',
-    fontSize: 14,
-  },
-  value: {
-    color: '#455A64',
-    fontSize: 14,
-    flex: 1,
-  },
-  footerProtocolo: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  protocoloText: {
-    fontSize: 12,
-    fontStyle: 'italic',
-    color: '#78909C',
-  },
-  emptyContainer: {
+  heroIconWrap: {
+    width: 54,
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
+    marginBottom: 14,
   },
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 12,
+  heroTitle: {
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
-  emptyText: {
+  heroSubtitle: {
+    color: 'rgba(255,255,255,0.75)',
     fontSize: 14,
-    color: '#757575',
-    textAlign: 'center',
+    marginTop: 4,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    padding: 20,
+    paddingTop: 24,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  cardTextWrap: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1f1f1f',
+  },
+  cardSubtitle: {
+    fontSize: 12.5,
+    color: '#8a8a8a',
+    marginTop: 2,
+  },
+  footerButton: {
+    flexDirection: 'row',
+    backgroundColor: '#6a1fb0',
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  footerButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

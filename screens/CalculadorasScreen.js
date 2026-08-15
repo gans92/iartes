@@ -11,6 +11,15 @@ import { Ionicons } from '@expo/vector-icons';
 
 const CALCULADORAS = [
   {
+    id: '6',
+    label: 'Risco Cardiovascular',
+    subtitle: 'Risco de eventos cardiovasculares',
+    icon: 'heart-outline',
+    color: '#b0245c',
+    bg: '#fbe4ee',
+    screen: 'RiscoCardiovascular',
+  },
+  {
     id: '1',
     label: 'Avaliar Função Renal',
     subtitle: 'Cockcroft-Gault',
@@ -54,15 +63,6 @@ const CALCULADORAS = [
     color: '#6a1fb0',
     bg: '#efe4fb',
     screen: 'IdadeGestacional',
-  },
-  {
-    id: '6',
-    label: 'Risco Cardiovascular',
-    subtitle: 'Escore de Framingham (ERG)',
-    icon: 'heart-outline',
-    color: '#b0245c',
-    bg: '#fbe4ee',
-    screen: 'RiscoCardiovascular',
   },
 ];
 
