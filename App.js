@@ -14,11 +14,13 @@ import IdadeGestacionalScreen from './screens/IdadeGestacionalScreen';
 import RiscoCardiovascularScreen from './screens/RiscoCardiovascularScreen';
 import MrpaGlicemiaScreen from './screens/MrpaGlicemiaScreen';
 import PosologiaScreen from './screens/PosologiaScreen';
+import TratamentoDoencasScreen from './screens/TratamentoDoencasScreen';
+import ModelosSoapScreen from './screens/ModelosSoapScreen';
 
 const Stack = createNativeStackNavigator();
 
 const CORES = {
-  roxo: '#6a1fb0',
+  roxo: '#5B2A8C',
   azul: '#1a6fb0',
   vermelho: '#c0483f',
   ambar: '#8a5a1f',
@@ -40,7 +42,7 @@ const linking = {
   prefixes: ['https://gans92.github.io/iartes', 'http://localhost:19006'],
   config: {
     screens: {
-      Home: 'iartes', // Raiz exata do site (gans92.github.io/iartes/)
+      Home: 'iartes',
       Calculadoras: 'calculadoras',
       Sobre: 'sobre',
       FuncaoRenal: 'funcao-renal',
@@ -51,6 +53,8 @@ const linking = {
       IdadeGestacional: 'idade-gestacional',
       MrpaGlicemia: 'mrpa-glicemia',
       Posologia: 'posologia',
+      TratamentoDoencas: 'tratamento-doencas',
+      ModelosSoap: 'modelos-soap', // Adicionado ao deep linking
     },
   },
 };
@@ -79,7 +83,7 @@ function AppNavigator() {
         <Stack.Screen
           name="Sobre"
           component={SobreScreen}
-          options={headerOptions(CORES.roxo, 'Sobre')}
+          options={headerOptions(CORES.roxo, 'Sobre ProConduta')}
         />
         <Stack.Screen
           name="FuncaoRenal"
@@ -120,6 +124,17 @@ function AppNavigator() {
           name="Posologia"
           component={PosologiaScreen}
           options={headerOptions(CORES.azul, 'Posologia de Medicamentos')}
+        />
+        <Stack.Screen
+          name="TratamentoDoencas"
+          component={TratamentoDoencasScreen}
+          options={headerOptions(CORES.vermelho, 'Tratamento de Doenças')}
+        />
+        {/* Nome padronizado para "ModelosSoap" sem espaço */}
+        <Stack.Screen
+          name="ModelosSoap"
+          component={ModelosSoapScreen}
+          options={headerOptions(CORES.roxo, 'Modelos de SOAP')}
         />
       </Stack.Navigator>
     </NavigationContainer>

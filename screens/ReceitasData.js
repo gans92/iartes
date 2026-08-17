@@ -160,6 +160,22 @@ export const RECEITAS = [
         controlado: false,
         obs: null,
       },
+      {
+        nome: 'ANLODIPINO - BESILATO 5 MG',
+        via: 'VO',
+        quantidade: '30',
+        posologia: 'TOMAR 1 COMPRIMIDO ÀS 17H (CINCO HORAS DA TARDE)',
+        controlado: false,
+        unidade: 'CPR',
+      },
+      {
+        nome: 'ENALAPRIL - 20 MG',
+        via: 'VO',
+        quantidade: '60',
+        posologia: 'TOMAR 1 COMPRIMIDO MANHÃ E NOITE',
+        controlado: false,
+        unidade: 'CPR',
+      },
     ],
   },
   {
@@ -1070,7 +1086,107 @@ export const RECEITAS = [
       },
     ],
   },
+  {
+    id: 'quetiapina',
+    titulo: 'Quetiapina',
+    contexto: 'Esquizofrenia / Transtorno Bipolar / Insônia',
+    itens: [
+      {
+        nome: 'QUETROS 100MG',
+        via: 'VO',
+        quantidade: '60',
+        posologia: 'TOMAR 1 COMPRIMIDO VO A NOITE',
+        controlado: true,
+        unidade: 'CPR',
+      },
+    ],
+  },
+  {
+    id: 'haloperidol',
+    titulo: 'Haloperidol',
+    contexto: 'Psicose / Agitação / Antipsicótico',
+    itens: [
+      {
+        nome: 'HALDOL 1 MG',
+        via: 'VO',
+        quantidade: '120',
+        posologia: 'TOMAR 01 CP VO 12/ 12 H',
+        controlado: true,
+        unidade: 'CP',
+      },
+    ],
+  },
+  {
+    id: 'risperidona',
+    titulo: 'Risperidona',
+    contexto: 'Esquizofrenia / Transtorno Bipolar / Autismo',
+    itens: [
+      {
+        nome: 'RISS 3MG',
+        via: 'VO',
+        quantidade: '120',
+        posologia: 'TOMAR 1 COMPRIMIDO VO 12/12H',
+        controlado: true,
+        unidade: 'CPR',
+      },
+      {
+        nome: 'RISPERIDONA 3 MG',
+        via: 'VO',
+        quantidade: '90',
+        posologia: 'TOMAR UM COMPRIMIDO A NOITE',
+        controlado: true,
+        unidade: 'COMPRIMIDO',
+      },
+    ],
+  },
+  {
+    id: 'anticonvulsivante',
+    titulo: 'Anticonvulsivante / Outros Medicamentos',
+    contexto: 'Epilepsia / Dor Neuropática / Outros',
+    itens: [
+      {
+        nome: 'OXCARBAZEPINA - 300 MG',
+        via: 'VO',
+        quantidade: '120',
+        posologia: 'TOMAR 01 COMPRIMIDO PELA MANHÃ E 01 COMPRIMIDO A NOITE.',
+        controlado: true,
+        unidade: 'CPR',
+      }
+    ],
+  },
+  {
+    id: 'endometriose',
+    titulo: 'Endometriose',
+    contexto: 'Endometriose / Tratamento Hormonal',
+    itens: [
+      {
+        nome: 'ZOLADEX - 3,6 MG',
+        via: 'SC',
+        quantidade: '1',
+        posologia: '1 VEZ NO MÊS',
+        controlado: false,
+        unidade: 'SERINGA',
+      },
+      {
+        nome: 'PREGABALINA 150MG',
+        via: 'VO',
+        quantidade: '120',
+        posologia: 'TOMAR 1 COMPRIMIDO VIA ORAL 12/12H',
+        controlado: true,
+        unidade: 'CPR',
+      },
+      {
+        nome: 'PACO 500/7,5MG',
+        via: 'VO',
+        quantidade: '30',
+        posologia: 'TOMAR 01 COMPRIMIDO DE 6/6H SE DOR INTENSA.',
+        controlado: true,
+        unidade: 'CPR',
+      },
+    ],
+  },
 ];
+
 
 export const CATEGORIAS_FAIXA_ETARIA = {
   adulto: 'Adulto',

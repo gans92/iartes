@@ -20,33 +20,34 @@ export default function SobreScreen() {
         {/* Selo do app */}
         <View style={styles.logoWrap}>
           <View style={styles.logoCircle}>
-            <Ionicons name="medkit-outline" size={34} color="#fff" />
+            <Ionicons name="medkit" size={36} color="#fff" />
           </View>
-          <Text style={styles.appName}>CALC MED</Text>
+          <Text style={styles.appName}>ProConduta</Text>
+          <Text style={styles.appSlogan}>Suporte à decisão clínica e prescrição</Text>
           <Text style={styles.appVersao}>Versão 2.0.0</Text>
-        </View>
-
-        {/* Card de desenvolvedor */}
-        <View style={styles.card}>
-          <View style={[styles.iconCircle, { backgroundColor: '#efe4fb' }]}>
-            <Ionicons name="person-outline" size={22} color="#6a1fb0" />
-          </View>
-          <View style={styles.cardTextWrap}>
-            <Text style={styles.cardLabel}>Desenvolvido por</Text>
-            <Text style={styles.cardValor}>Gabriel Alisson</Text>
-          </View>
         </View>
 
         {/* Card de propósito do app */}
         <View style={styles.card}>
-          <View style={[styles.iconCircle, { backgroundColor: '#e2f5ec' }]}>
-            <Ionicons name="heart-outline" size={22} color="#1f7a5c" />
+          <View style={[styles.iconCircle, { backgroundColor: '#F3E8FF' }]}>
+            <Ionicons name="shield-checkmark-outline" size={22} color="#5B2A8C" />
           </View>
           <View style={styles.cardTextWrap}>
-            <Text style={styles.cardLabel}>Sobre o app</Text>
-            <Text style={styles.cardValor}>
-              Calculadoras médicas rápidas para apoiar decisões clínicas do dia a dia.
+            <Text style={styles.cardLabel}>Sobre a Plataforma</Text>
+            <Text style={styles.cardValorDescricao}>
+              Guia prático para a rotina médica. Agilize consultas e plantões com acesso rápido a posologias, tratamento de doenças, calculadoras clínicas e ferramentas de acompanhamento.
             </Text>
+          </View>
+        </View>
+
+        {/* Card de desenvolvedor */}
+        <View style={styles.card}>
+          <View style={[styles.iconCircle, { backgroundColor: '#E0F2FE' }]}>
+            <Ionicons name="code-slash-outline" size={22} color="#0284C7" />
+          </View>
+          <View style={styles.cardTextWrap}>
+            <Text style={styles.cardLabel}>Desenvolvido por</Text>
+            <Text style={styles.cardValor}>Gabriel Alisson</Text>
           </View>
         </View>
 
@@ -56,14 +57,14 @@ export default function SobreScreen() {
           activeOpacity={0.75}
           onPress={() => Linking.openURL('mailto:contato@example.com')}
         >
-          <View style={[styles.iconCircle, { backgroundColor: '#fbe6e3' }]}>
-            <Ionicons name="mail-outline" size={22} color="#c0483f" />
+          <View style={[styles.iconCircle, { backgroundColor: '#FEE2E2' }]}>
+            <Ionicons name="mail-outline" size={22} color="#DC2626" />
           </View>
           <View style={styles.cardTextWrap}>
             <Text style={styles.cardLabel}>Sugestões ou dúvidas</Text>
             <Text style={styles.cardValor}>Enviar feedback</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#c4c4c4" />
+          <Ionicons name="chevron-forward" size={20} color="#C4C4C4" />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -73,58 +74,66 @@ export default function SobreScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f4f2f7',
+    backgroundColor: '#F8F9FA',
   },
   content: {
     padding: 20,
-    paddingTop: 24,
+    paddingTop: 28,
   },
   logoWrap: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   logoCircle: {
-    width: 76,
-    height: 76,
-    borderRadius: 22,
-    backgroundColor: '#6a1fb0',
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    backgroundColor: '#5B2A8C',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-    shadowColor: '#6a1fb0',
+    shadowColor: '#5B2A8C',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 5,
   },
   appName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
-    color: '#1f1f1f',
-    letterSpacing: 1,
+    color: '#1A202C',
+    letterSpacing: 0.5,
+  },
+  appSlogan: {
+    fontSize: 13,
+    color: '#5B2A8C',
+    fontWeight: '600',
+    marginTop: 2,
   },
   appVersao: {
-    fontSize: 13,
-    color: '#8a8a8a',
-    marginTop: 2,
+    fontSize: 12,
+    color: '#A0AEC0',
+    marginTop: 6,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 18,
+    backgroundColor: '#FFF',
+    borderRadius: 16,
     padding: 16,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   iconCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 13,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -133,13 +142,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardLabel: {
-    fontSize: 12.5,
-    color: '#8a8a8a',
+    fontSize: 12,
+    color: '#718096',
+    fontWeight: '500',
     marginBottom: 2,
   },
   cardValor: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1f1f1f',
+    color: '#2D3748',
+  },
+  cardValorDescricao: {
+    fontSize: 13.5,
+    fontWeight: '400',
+    color: '#4A5568',
+    lineHeight: 19,
+    marginTop: 2,
   },
 });

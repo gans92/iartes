@@ -13,15 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 const MENU_ITEMS = [
   {
     id: '1',
-    label: 'Calculadoras',
-    subtitle: 'Ferramentas clínicas rápidas',
-    icon: 'calculator-outline',
-    color: '#6a1fb0',
-    bg: '#efe4fb',
-    screen: 'Calculadoras',
-  },
-  {
-    id: '2',
     label: 'Posologias',
     subtitle: 'Medicações e doses recomendadas',
     icon: 'medkit-outline',
@@ -30,7 +21,34 @@ const MENU_ITEMS = [
     screen: 'Posologia',
   },
   {
+    id: '2',
+    label: 'Tratamento de Doenças',
+    subtitle: 'Protocolos clínicos por condição',
+    icon: 'pulse-outline',
+    color: '#c2410c',
+    bg: '#ffedd5',
+    screen: 'TratamentoDoencas',
+  },
+   {
+    id: '6',
+    label: 'Modelo SOAP',
+    subtitle: 'Formulário de avaliação clínica',
+    icon: 'document-text-outline',
+    color: '#4b1585',
+    bg: '#f3e5f5',
+    screen: 'ModelosSoap',
+  },
+  {
     id: '3',
+    label: 'Calculadoras',
+    subtitle: 'Ferramentas clínicas rápidas',
+    icon: 'calculator-outline',
+    color: '#6a1fb0',
+    bg: '#efe4fb',
+    screen: 'Calculadoras',
+  },
+  {
+    id: '4',
     label: 'Monitorização da Pressão Arterial',
     subtitle: 'Gerar formulário para impressão',
     icon: 'print-outline',
@@ -39,7 +57,7 @@ const MENU_ITEMS = [
     screen: 'MrpaGlicemia',
   },
   {
-    id: '4',
+    id: '5',
     label: 'Sobre',
     subtitle: 'Informações do aplicativo',
     icon: 'information-circle-outline',
@@ -47,6 +65,7 @@ const MENU_ITEMS = [
     bg: '#e2f5ec',
     screen: 'Sobre',
   },
+ 
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -59,7 +78,8 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.heroIconWrap}>
           <Ionicons name="medkit-outline" size={30} color="#fff" />
         </View>
-        <Text style={styles.heroTitle}>CALC MED</Text>
+        <Text style={styles.heroTitle}>ProConduta
+        </Text>
         <Text style={styles.heroSubtitle}>Calculadoras médicas na palma da mão</Text>
       </View>
 

@@ -20,11 +20,20 @@ const normalizeText = (text) => {
     .toLowerCase();
 };
 
+// Limpa apenas pontuações/vírgulas/barras do final (mantendo ML e dosagens)
+const cleanTitle = (nome) => {
+  if (!nome) return '';
+  return nome
+    .replace(/[,;.\-\/]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+};
+
 export default function PosologiaScreen() {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Transforma a lista de receitas agrupadas em uma lista individual de medicamentos/itens
-  // e já aplica a ordenação ALFABÉTICA pelo nome do medicamento
+  // 1. Extrai todos os itens de todas as receitas
   const todosOsMedicamentos = useMemo(() => {
     const lista = [];
     RECEITAS.forEach((receita) => {
@@ -40,18 +49,17 @@ export default function PosologiaScreen() {
       }
     });
 
-    // Ordenação alfabética (A-Z) considerando acentos
     return lista.sort((a, b) =>
       (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' })
     );
   }, []);
 
-  // Filtro inteligente mantendo a ordem alfabética
+  // 2. Filtra pela busca E AGRUPA dosagens do mesmo medicamento no mesmo card
   const medicamentosFiltrados = useMemo(() => {
     const query = normalizeText(searchQuery.trim());
-    if (!query) return todosOsMedicamentos;
-
-    return todosOsMedicamentos.filter((med) => {
+    
+    const filtrados = todosOsMedicamentos.filter((med) => {
+      if (!query) return true;
       const nomeMatch = normalizeText(med.nome).includes(query);
       const posologiaMatch = normalizeText(med.posologia).includes(query);
       const protocoloMatch = normalizeText(med.protocoloTitulo).includes(query);
@@ -60,41 +68,69 @@ export default function PosologiaScreen() {
 
       return nomeMatch || posologiaMatch || protocoloMatch || contextoMatch || obsMatch;
     });
+
+    const agrupadosMap = new Map();
+
+    filtrados.forEach((item) => {
+      const nomeBase = cleanTitle(item.nome);
+
+      if (!agrupadosMap.has(nomeBase)) {
+        agrupadosMap.set(nomeBase, {
+          idUnico: item.idUnico,
+          nomeBase: nomeBase,
+          protocoloTitulo: item.protocoloTitulo,
+          opcoes: [item],
+        });
+      } else {
+        agrupadosMap.get(nomeBase).opcoes.push(item);
+      }
+    });
+
+    return Array.from(agrupadosMap.values());
   }, [searchQuery, todosOsMedicamentos]);
 
-  const renderItem = ({ item }) => (
+  // Componente do Card Único
+  const renderItem = ({ item: grupo }) => (
     <View style={styles.card}>
-      <Text style={styles.medNome}>{item.nome}</Text>
+      <Text style={styles.medNome}>{grupo.nomeBase}</Text>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Via: </Text>
-        <Text style={styles.value}>{item.via || 'VO'}</Text>
-      </View>
+      {grupo.opcoes.map((op, idx) => (
+        <View key={op.idUnico || idx} style={idx > 0 ? styles.subOpcaoDivider : null}>
+          {grupo.opcoes.length > 1 && (
+            <Text style={styles.subNome}>{cleanTitle(op.nome)}</Text>
+          )}
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Quantidade: </Text>
-        <Text style={styles.value}>{item.quantidade}</Text>
-      </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Via: </Text>
+            <Text style={styles.value}>{op.via || 'VO'}</Text>
+          </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Posologia: </Text>
-        <Text style={styles.value}>{item.posologia}</Text>
-      </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Quantidade: </Text>
+            <Text style={styles.value}>{op.quantidade}</Text>
+          </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Controlado: </Text>
-        <Text style={styles.value}>{item.controlado ? 'Sim' : 'Não'}</Text>
-      </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Posologia: </Text>
+            <Text style={styles.value}>{op.posologia}</Text>
+          </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Unidade: </Text>
-        <Text style={styles.value}>{item.unidade || 'CPR'}</Text>
-      </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Controlado: </Text>
+            <Text style={styles.value}>{op.controlado ? 'Sim' : 'Não'}</Text>
+          </View>
 
-      {item.protocoloTitulo && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Unidade: </Text>
+            <Text style={styles.value}>{op.unidade || 'CPR'}</Text>
+          </View>
+        </View>
+      ))}
+
+      {grupo.protocoloTitulo && (
         <View style={styles.footerProtocolo}>
           <Text style={styles.protocoloText}>
-            ⓘ Protocolo: {item.protocoloTitulo}
+            ⓘ Protocolo: {grupo.protocoloTitulo}
           </Text>
         </View>
       )}
@@ -103,12 +139,12 @@ export default function PosologiaScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+      <StatusBar barStyle="light-content" backgroundColor="#5B1982" />
 
       <View style={styles.content}>
         <Text style={styles.mainTitle}>Doses Rápidas & Posologia</Text>
         <Text style={styles.subtitle}>
-          {medicamentosFiltrados.length} medicamentos disponíveis
+          {medicamentosFiltrados.length} medicamentos/grupos disponíveis
         </Text>
 
         {/* Campo de Busca */}
@@ -164,7 +200,7 @@ const styles = StyleSheet.create({
   mainTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1A237E',
+    color: '#1a6fb0',
   },
   subtitle: {
     fontSize: 13,
@@ -213,10 +249,23 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   medNome: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: 'bold',
-    color: '#263238',
+    color: '#1a6fb0',
     marginBottom: 8,
+  },
+  subNome: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#37474F',
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  subOpcaoDivider: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#ECEFF1',
   },
   row: {
     flexDirection: 'row',
@@ -234,7 +283,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footerProtocolo: {
-    marginTop: 8,
+    marginTop: 12,
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
