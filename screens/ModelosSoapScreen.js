@@ -9,8 +9,11 @@ import {
   ScrollView,
   SafeAreaView,
   Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { melhorarHDA } from './geminiService'; // Importação do serviço Gemini
 
 // Categorias focadas nos perfis demográficos e de atendimento
 const CATEGORIAS = {
@@ -168,7 +171,7 @@ export default function ModelosSoapScreen() {
   if (modeloSelecionado) {
     return (
       <VisualizarSoap
-        modelo={modeloSelecionado}
+        modeloInicial={modeloSelecionado}
         onVoltar={() => setModeloSelecionado(null)}
       />
     );
@@ -199,7 +202,7 @@ export default function ModelosSoapScreen() {
           style={styles.setaButton}
           onPress={() => scrollRef.current?.scrollTo({ x: -160, animated: true })}
         >
-          <Ionicons name="chevron-back" size={18} color="#5B2A8C" />
+          <Ionicons name="chevron-back" size={18} color="#5B1982" />
         </TouchableOpacity>
 
         <ScrollView
@@ -234,7 +237,7 @@ export default function ModelosSoapScreen() {
           style={styles.setaButton}
           onPress={() => scrollRef.current?.scrollTo({ x: 160, animated: true })}
         >
-          <Ionicons name="chevron-forward" size={18} color="#5B2A8C" />
+          <Ionicons name="chevron-forward" size={18} color="#5B1982" />
         </TouchableOpacity>
       </View>
 
@@ -264,7 +267,7 @@ export default function ModelosSoapScreen() {
               <Text style={styles.cardTitulo}>{item.titulo}</Text>
               <Text style={styles.cardDescricao}>{item.descricao}</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#5B2A8C" />
+            <Ionicons name="chevron-forward" size={20} color="#5B1982" />
           </TouchableOpacity>
         )}
       />
@@ -272,13 +275,39 @@ export default function ModelosSoapScreen() {
   );
 }
 
-// Tela de Visualização Detalhada
-function VisualizarSoap({ modelo, onVoltar }) {
+// Tela de Visualização e Edição Detalhada com IA
+function VisualizarSoap({ modeloInicial, onVoltar }) {
+  const [subjetivo, setSubjetivo] = useState(modeloInicial.soap.subjetivo);
+  const [objetivo, setObjetivo] = useState(modeloInicial.soap.objetivo);
+  const [avaliacao, setAvaliacao] = useState(modeloInicial.soap.avaliacao);
+  const [plano, setPlano] = useState(modeloInicial.soap.plano);
+
   const [copiado, setCopiado] = useState(false);
+  const [carregandoIA, setCarregandoIA] = useState(false);
+
+  // Função para chamar a Inteligência Artificial e aprimorar a HDA
+  const handleAprimorarHDA = async () => {
+    if (!subjetivo.trim()) return;
+
+    setCarregandoIA(true);
+    try {
+      const hdaMelhorada = await melhorarHDA(subjetivo, modeloInicial.titulo);
+      if (hdaMelhorada) {
+        setSubjetivo(hdaMelhorada.toUpperCase());
+      }
+    } catch (err) {
+      if (Platform.OS === 'web') {
+        alert('Erro ao conectar com a IA. Tente novamente.');
+      } else {
+        Alert.alert('Erro', 'Não foi possível se conectar à IA.');
+      }
+    } finally {
+      setCarregandoIA(false);
+    }
+  };
 
   const executarCopia = async () => {
-    // Texto copiado obrigatoriamente 100% em maiúsculo
-    const textoFormatado = `[SUBJETIVO]\n${modelo.soap.subjetivo}\n\n[OBJETIVO]\n${modelo.soap.objetivo}\n\n[AVALIAÇÃO]\n${modelo.soap.avaliacao}\n\n[PLANO]\n${modelo.soap.plano}`.toUpperCase();
+    const textoFormatado = `[SUBJETIVO / HDA]\n${subjetivo}\n\n[OBJETIVO]\n${objetivo}\n\n[AVALIAÇÃO]\n${avaliacao}\n\n[PLANO]\n${plano}`.toUpperCase();
 
     try {
       if (Platform.OS === 'web') {
@@ -312,34 +341,56 @@ function VisualizarSoap({ modelo, onVoltar }) {
           <Ionicons name="arrow-back" size={24} color="#1A202C" />
         </TouchableOpacity>
         <Text style={styles.headerDetalheTitulo} numberOfLines={1}>
-          {modelo.titulo}
+          {modeloInicial.titulo}
         </Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <SoapCard
+        {/* Bloco S com Aprimoramento de IA */}
+        <SoapCardEditable
           letra="S"
-          titulo="SUBJETIVO"
+          titulo="SUBJETIVO / HDA"
           cor="#3B82F6"
-          conteudo={modelo.soap.subjetivo}
+          conteudo={subjetivo}
+          onChangeConteudo={setSubjetivo}
+          botaoIA={
+            <TouchableOpacity
+              style={styles.botaoIa}
+              onPress={handleAprimorarHDA}
+              disabled={carregandoIA}
+            >
+              {carregandoIA ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <>
+                  <Ionicons name="sparkles" size={14} color="#FFF" style={{ marginRight: 4 }} />
+                  <Text style={styles.botaoIaTexto}>MELHORAR HDA COM IA</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          }
         />
-        <SoapCard
+
+        <SoapCardEditable
           letra="O"
           titulo="OBJETIVO"
           cor="#10B981"
-          conteudo={modelo.soap.objetivo}
+          conteudo={objetivo}
+          onChangeConteudo={setObjetivo}
         />
-        <SoapCard
+        <SoapCardEditable
           letra="A"
           titulo="AVALIAÇÃO"
           cor="#F59E0B"
-          conteudo={modelo.soap.avaliacao}
+          conteudo={avaliacao}
+          onChangeConteudo={setAvaliacao}
         />
-        <SoapCard
+        <SoapCardEditable
           letra="P"
           titulo="PLANO"
           cor="#8B5CF6"
-          conteudo={modelo.soap.plano}
+          conteudo={plano}
+          onChangeConteudo={setPlano}
         />
 
         {/* Botão Dinâmico de Cópia */}
@@ -363,16 +414,28 @@ function VisualizarSoap({ modelo, onVoltar }) {
   );
 }
 
-function SoapCard({ letra, titulo, cor, conteudo }) {
+// Componente do Card SOAP Editável
+function SoapCardEditable({ letra, titulo, cor, conteudo, onChangeConteudo, botaoIA }) {
   return (
     <View style={styles.soapCard}>
       <View style={styles.soapHeaderRow}>
-        <View style={[styles.soapBadge, { backgroundColor: cor }]}>
-          <Text style={styles.soapBadgeTexto}>{letra}</Text>
+        <View style={styles.soapTitleLeft}>
+          <View style={[styles.soapBadge, { backgroundColor: cor }]}>
+            <Text style={styles.soapBadgeTexto}>{letra}</Text>
+          </View>
+          <Text style={styles.soapTituloSection}>{titulo}</Text>
         </View>
-        <Text style={styles.soapTituloSection}>{titulo}</Text>
+
+        {botaoIA && <View>{botaoIA}</View>}
       </View>
-      <Text style={styles.soapConteudoText}>{conteudo}</Text>
+
+      <TextInput
+        style={styles.soapInput}
+        multiline
+        value={conteudo}
+        onChangeText={onChangeConteudo}
+        autoCapitalize="characters"
+      />
     </View>
   );
 }
@@ -410,7 +473,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 8,
   },
-  chipAtivo: { backgroundColor: '#5B2A8C' },
+  chipAtivo: { backgroundColor: '#5B1982' },
   chipTexto: { fontSize: 11.5, color: '#4A5568', fontWeight: '700' },
   chipTextoAtivo: { color: '#FFF', fontWeight: '700' },
 
@@ -433,7 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 6,
   },
-  tagCategoriaTexto: { fontSize: 10.5, fontWeight: '700', color: '#5B2A8C' },
+  tagCategoriaTexto: { fontSize: 10.5, fontWeight: '700', color: '#5B1982' },
   cardTitulo: { fontSize: 13.5, fontWeight: '700', color: '#1A202C' },
   cardDescricao: {
     fontSize: 12,
@@ -469,7 +532,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  soapHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  soapHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  soapTitleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   soapBadge: {
     width: 26,
     height: 26,
@@ -480,11 +552,32 @@ const styles = StyleSheet.create({
   },
   soapBadgeTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
   soapTituloSection: { fontSize: 14, fontWeight: '700', color: '#2D3748' },
-  soapConteudoText: { fontSize: 12.5, color: '#4A5568', lineHeight: 20, fontWeight: '500' },
+  soapInput: {
+    fontSize: 12.5,
+    color: '#4A5568',
+    lineHeight: 20,
+    fontWeight: '500',
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+
+  botaoIa: {
+    backgroundColor: '#5B1982',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  botaoIaTexto: {
+    color: '#FFF',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
 
   botaoCopiar: {
     flexDirection: 'row',
-    backgroundColor: '#5B2A8C',
+    backgroundColor: '#5B1982',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
