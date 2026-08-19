@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { DOENCAS } from './DoencasData';
+import { DOENCAS } from './data/DoencasData';
 
 const CATEGORIA_LABELS = {
   ginecologia: 'Ginecologia',

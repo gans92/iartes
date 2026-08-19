@@ -1,10 +1,4 @@
-// ============================================================
-// CALC MED — Mock completo de DOENCAS
-// Continuação do array já iniciado (Ginecologia + Pneumologia).
-// Cole os blocos abaixo dentro do seu array DOENCAS existente.
-// ============================================================
-
-  // ─────────────────────────────
+// ─────────────────────────────
   // 👂 OTORRINOLARINGOLOGIA E OFTALMOLOGIA
   // ─────────────────────────────
   export const DOENCAS = [

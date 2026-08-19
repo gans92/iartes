@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
+
 import {
   View,
   Text,
@@ -8,585 +9,1251 @@ import {
   TextInput,
   ScrollView,
   SafeAreaView,
-  Platform,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
-import { melhorarHDA } from './geminiService'; // Importação do serviço Gemini
+import { melhorarHDA, formularPlano } from './services/geminiService';
 
-// Categorias focadas nos perfis demográficos e de atendimento
-const CATEGORIAS = {
-  todas: 'Todas',
-  idoso: 'Saúde do Idoso',
-  mulher: 'Saúde da Mulher',
-  pediatria: 'Pediatria',
-  geral: 'Clínica Geral',
-  emergencia: 'Pronto Atendimento',
-};
 
-// Banco de Dados com Modelos divididos por perfil (100% EM MAIÚSCULO)
-const MODELOS_SOAP = [
-  // --- SAÚDE DO IDOSO ---
-  {
-    id: '1',
-    titulo: 'CONSULTA GERONTOLÓGICA DE ROTINA / POLIFARMÁCIA',
-    categoria: 'idoso',
-    descricao: 'Acompanhamento do idoso, rastreio de fragilidade e revisão de medicações.',
-    soap: {
-      subjetivo:
-        'ACOMPANHANTE/PACIENTE RELATA CONSULTA DE ROTINA. NEGA QUEDAS RECENTES, TONTURAS OU QUEIXAS AGUDAS. SONO PRESERVADO, APETITE MANTIDO. EM USO DE [LISTA DE MEDICAMENTOS]. NEGA ALERGIAS.',
-      objetivo:
-        'BEG, LOTE, EUPNÉICO, ACIANÓTICO, ANICTÉRICO. MARCHA PRESERVADA/SEM INSTABILIDADE VISÍVEL.\nPA: [130X80] MMHG | FC: [72] BPM | SPO2: [96]%\nAUSCULTA CARDÍACA: RCR 2T SEM SOPROS.\nAUSCULTA PULMONAR: MV+, SEM RUÍDOS ADVENTÍCIOS.\nMEMBROS INFERIORES: SEM EDEMAS, PULSOS PEDIOSOS PRESENTES E SIMÉTRICOS.\nAVALIAÇÃO FUNCIONAL: AUTÔNOMO PARA AVDS BÁSICAS.',
-      avaliacao:
-        '1. ACOMPANHAMENTO DE ROTINA DA PESSOA IDOSA.\n2. POLIFARMÁCIA EM MONITORIZAÇÃO.\n3. AUSÊNCIA DE SINAIS DE FRAGILIDADE AGUDA.',
-      plano:
-        '1. REVISÃO DAS MEDICAÇÕES E AJUSTE DE POSOLOGIAS (CRITÉRIOS DE BEERS/STOPP-START).\n2. SOLICITADOS EXAMES DE ROTINA (HEMOGRAMA, FUNÇÃO RENAL, ELETRÓLITOS, VITAMINA B12, TSH).\n3. ORIENTAÇÕES SOBRE PREVENÇÃO DE QUEDAS NO DOMICÍLIO.\n4. RETORNO EM [X] MESES.',
-    },
-  },
-  {
-    id: '2',
-    titulo: 'AVALIAÇÃO DE DECLÍNIO COGNITIVO / SUSPEITA DE DEMÊNCIA',
-    categoria: 'idoso',
-    descricao: 'Investigação inicial de perda de memória e alterações comportamentais.',
-    soap: {
-      subjetivo:
-        'FAMILIAR RELATA LAPSOS DE MEMÓRIA DE FIXAÇÃO PROGRESSIVOS HÁ [X] MESES/ANOS. PACIENTE REPETE PERGUNTAS E APRESENTA DIFICULDADE COM FINANÇAS/TAREFAS COMPLEXAS. NEGA ALTERAÇÕES SÚBITAS DO COMPORTAMENTO OU FEBRE.',
-      objetivo:
-        'PACIENTE CALMO, COLABORATIVO. EXAME NEUROLÓGICO SIMPLIFICADO SEM DÉFICITS FOCAIS APARENTES.\nMEEM / MEEM-BREVE / MOCA: [PONTUAÇÃO X/30].\nTESTES DO DESENHO DO RELÓGIO: [NORMAL/ALTERADO].\nEXAME FÍSICO SEGMENTAR SEM ALTERAÇÕES AGUDAS.',
-      avaliacao:
-        '1. SÍNDROME DEMENCIAL A ESCLARECER (SÍNDROME DE DECLÍNIO COGNITIVO A ESCLARECER - CID-10: R41.8).',
-      plano:
-        '1. SOLICITAÇÃO DE EXAMES DE RASTREIO DE CAUSAS REVERSÍVEIS (VITAMINA B12, TSH, VDRL, FUNÇÃO RENAL/HEPÁTICA, ELETRÓLITOS).\n2. SOLICITAÇÃO DE TC/RM DE CRÂNIO SEM CONTRASTE.\n3. ORIENTAÇÕES À FAMÍLIA SOBRE SEGURANÇA E SUPORTE FUNCIONAL.\n4. RETORNO COM EXAMES PARA DEFINIÇÃO CONDUTA/ENCAMINHAMENTO.',
-    },
-  },
+// ============================================================
+// 4 MODELOS
+// ============================================================
 
-  // --- SAÚDE DA MULHER ---
+const MODELOS = [
   {
-    id: '3',
-    titulo: 'CONSULTA GINECOLÓGICA DE ROTINA / RASTREAMENTO',
-    categoria: 'mulher',
-    descricao: 'Coleta de Papanicolau, exame das mamas e rotina ginecológica.',
-    soap: {
-      subjetivo:
-        'PACIENTE ASSINTOMÁTICA, VEM PARA EXAME PREVENTIVO DE ROTINA. DUM: [DD/MM/AAAA]. COITARCA AOS [X] ANOS. G[X] P[X] A[X]. USO DE MÉTODO CONTRACEPTIVO: [MÉTODO / NAO USA]. NEGA SINUSORRAGIA, CORRIMENTO COM ODOR OU DISPAREUNIA.',
-      objetivo:
-        'EXAME DAS MAMAS: MAMAS SIMÉTRICAS, SEM NÓDULOS PALPÁVEIS, SEM RETRAÇÃO DE PAPILA, DESCARGA PAPILAR NEGATIVA.\nEXAME ESPECULAR: COLO UTERINO DE ASPECTO [EPITÉLIO TRÓFICO/LISO/ECTOPIA], SEM LESÕES SUSPEITAS. CONTEÚDO VAGINAL FISIOLÓGICO.\nCOLETA DE CITOPATOLÓGICO REALIZADA SEM INTERCORRÊNCIAS.',
-      avaliacao:
-        '1. EXAME GINECOLÓGICO PREVENTIVO DE ROTINA (CID-10: Z01.4).',
-      plano:
-        '1. ORIENTAÇÕES SOBRE PREVENÇÃO DE ISTS E AUTOATENÇÃO.\n2. SOLICITAÇÃO DE MAMOGRAFIA (SE > 50 ANOS OU RISCO ELEVADO) / USG MAMAS / PELVICA SN.\n3. AGENDADO RETORNO PARA RESULTADO DO LAUDO CITOPATOLÓGICO.',
-    },
-  },
-  {
-    id: '4',
-    titulo: 'PRÉ-NATAL DE BAIXO RISCO (CONSULTA DE ACOMPANHAMENTO)',
-    categoria: 'mulher',
-    descricao: 'Consulta periódica de pré-natal para gestantes sem complicações.',
-    soap: {
-      subjetivo:
-        'GESTANTE COM IG DE [X] SEMANAS (POR DUM/USG PRECOCE). REFERE MOVIMENTAÇÃO FETAL PRESENTEE BOA. NEGA SANGRAMENTO VAGINAL, QUEIXAS URINÁRIAS, CEFALEIA INTENSA OU ESCOTOMAS.',
-      objetivo:
-        'PA: [110X70] MMHG | PESO: [X] KG (GANHO PONDERAL ADEQUADO).\nALTURA UTERINA (AU): [X] CM.\nBCA (BATIMENTOS CARDÍACOS FETAIS): [140] BPM, RITMO REGULAR.\nMEMBROS INFERIORES: SEM EDEMAS OU EDEMA FISIOLÓGICO +/4+.',
-      avaliacao:
-        '1. GESTAÇÃO TÓPICA DE [X] SEMANAS EM PRÉ-NATAL DE BAIXO RISCO (CID-10: Z34.8).',
-      plano:
-        '1. MANUTENÇÃO DO SULFATO FERROSO E ÁCIDO FÓLICO CONFORME IG.\n2. PRESCRITOS/CHECADOS EXAMES DO [1º/2º/3º] TRIMESTRE.\n3. ORIENTAÇÕES SOBRE SINAIS DE ALARME PARA URGÊNCIA OBSTÉTRICA (SANGRAMENTO, PERDA DE LÍQUIDO, DOR ABDOMINAL SEVERA).\n4. RETORNO PRÉ-NATAL EM [X] SEMANAS.',
-    },
+    id: 'crianca',
+    categoria: 'CRIANÇA',
+    titulo: 'CRIANÇA',
+    descricao: 'PUERICULTURA, CRESCIMENTO E DESENVOLVIMENTO.',
+    icone: 'happy-outline',
+
+    subjetivo: `QP: PUERICULTURA. 
+
+    HDA: PACIENTE ACOMPANHADO PELA - INÍCIO E CARACTERIZAÇÃO E EVOLUÇÃO DOS SINTOMAS 
+–  ORDEM CRONOLÓGICA DOS ACONTECIMENTOS ATÉ O MOMENTO ATUAL 
+- FATORES DESENCADEANTES: ALÍVIO E PIORA 
+- SINAIS E SINTOMAS ASSOCIADOS 
+-TRATAMENTO RECEBIDO ( NOME DO MEDICAMENTO, DOSE E TEMPO DE USO) -ÚLTIMA DOSE DA MEDICAÇÃO. 
+- OCORRÊNCIA ANTERIOR SIMILAR 
+- DADOS EPIDEMIOLÓGICOS (FAMÍLIA, CRECHE, FESTA, AMIGOS ÍNTIMOS... 
+
+HPP: NEGA ALERGIAS, INTERNAÇÕES E CIRURGIAS; HOG: G P A; NASCEU DE PARTO POR (MOTIVO) 
+APGAR PESO AO NASCER COMPRIMENTO: CM; PC CM; PT CM; PESO DE ALTA: APRESENTOU ICTERÍCIA NEONATAL? 
+REALIZOU QUANTAS CONSULTAS DE PRE-NATAL ? 
+FEZ SUPLEMENTAÇÃO DE FE NA GRAVIDEZ? E AGORA, FAZ USO DE FERRO? 
+TRIAGENS: TESTE DE ORELHINHAS, TESTE DO REFLEXO VERMELHO, TESTE DE PEZINHO, TESTE DO CORAÇÃO E TESTE DA LINGUINHA NORMAIS. 
+
+HF: PAIS HÍGIDOS. NEGA DM, HAS, DISLIPIDEMIAS E TIREOIDOPATIAS 
+HS: USO DE CHUPETAS, MAMADEIRAS, ONDE E COM QUEM DORME. TEMPO E HIGIENE DO SONO: 
+FUNÇÕES FISIOLÓGICAS: 
+
+ALIMENTAÇÃO: (TEMPO DE ALEITAMENTO MATERNO, USO DE FÓRMULAS, USO DE LEITE DE VACA, USO DE MAMADEIRA) 
+TELA: 
+
+VACINAS: 
+
+DNPM:
+`,
+
+    objetivo: `CRIANÇA EM BOM ESTADO GERAL, ATIVA, COMUNICATIVA, EUPNEICA, NORMOCORADA, HIDRATADA, ANICTÉRICA, ACIANÓTICA, COLABORATIVA E AFEBRIL. 
+MEDIDAS ANTROPOMÉTRICAS: 
+COMPRIMENTO: 81,5 CM 
+PESO: 11,200 KG 
+PC: 45,5 CM 
+CABEÇA E PESCOÇO: S/A OROSCOPIA: S/A (AUSENCIA DE PLACAS E HIPEREMIAS. DENTIÇÃO PRECÁRIA) 
+RINOSCOPIA: S/A A (MUCOSA PALIDA, SEM DESVIO SEPTAL, SEM HIPERTROFIA DE CONCHA NASAL INFERIOR, SEM RINORREIA) O
+TOSCOPIA: S/A (SEM HIPEREMIA, MEMBRANA TIMPÂNICA PRESERVADA, TRIÂNGULO LUMINOSO VISUALIZADO). 
+AR: MV+, BILATERALMENTE, AC: BNF, RCR EM 2T, SEM SOPROS. ABD: PLANO, FLÁCIDO, TIMPANICO, SEM DOR A PALPAÇÃO SUPERFICIAL/PROFUNDA, RHA+ S/A MMII: ASSIMÉTRICOS MAL FORMAÇÃO (PEZINHO TORTO), SEM EDEMAS, SEM LESÕES. 
+APARELHO REPRODUTOR: GENITÁLIA TÍPICA FEMININA. (TESTICULOS TOPICOS, SEM FIMOSE. (TÍPICA, FEMININA/MASCULINA S/A). ÂNUS PÉRVIO, S/A. ) ESCALA DE TANNER G1P1 (MENINOS) M1P1 (MENINAS)
+`,
+
+    avaliacao: `1. PUERICULTURA / ACOMPANHAMENTO INFANTIL.
+2. CRESCIMENTO: [ADEQUADO / ALTERADO].
+3. DESENVOLVIMENTO: [ADEQUADO / ALTERADO].`,
+
+    plano: `ORIENTAÇÕES GERAIS 
+ORIENTO SOBRE SINAIS DE ALARME PARA RETORNO NESTA UNIDADE OU PRONTO ATENDIMENTO; 
+ORIENTO SOBRE IMPORTANCIA DE AMAMENTAÇÃO EXCLUSIVA 
+PRESCREVO VITAMINA D 200UI 2 GTS POR DIA 
+SORO FISIOLOGICO PARA LAVAGEM NASAL 
+ORIENTO SOBRE IMPORTANCIA DE PUERICULTURA`
   },
 
-  // --- PEDIATRIA ---
   {
-    id: '5',
-    titulo: 'CONSULTA DE PUERICULTURA / DESENVOLVIMENTO INFANTIL',
-    categoria: 'pediatria',
-    descricao: 'Acompanhamento do crescimento, marcos do desenvolvimento e vacinação.',
-    soap: {
-      subjetivo:
-        'MÃE/ACOMPANHANTE TRAZ CRIANÇA DE [X] MESES/ANOS PARA PUERICULTURA. NEGA QUEIXAS AGUDAS. ALEITAMENTO [EXCLUSIVO / COMPLEMENTADO / FÓRMULAS]. SONO E ELIMINAÇÕES PRESERVADOS. CARTÃO DE VACINA ATUALIZADO.',
-      objetivo:
-        'DADOS ANTROPOMÉTRICOS: PESO: [X] KG (PERCENTIL X) | ESTATURA: [X] CM (PERCENTIL X) | PC: [X] CM.\nEXAME FÍSICO: BOM ESTADO GERAL, ATIVO, CORADO, ANICTÉRICO.\nOROSCOPIA E OTOSCOPIA SEM ALTERAÇÕES.\nMARCOS DO DESENVOLVIMENTO: [SENTA SEM APOIO / ENGATINHA / ANDA / BALBUCIA] - ADEQUADO PARA A IDADE.',
-      avaliacao:
-        '1. CRIANÇA EM ACOMPANHAMENTO DE PUERICULTURA COM CRESCIMENTO E DESENVOLVIMENTO ADEQUADOS PARA A IDADE.',
-      plano:
-        '1. ORIENTAÇÕES SOBRE INTRODUÇÃO ALIMENTAR / ALIMENTAÇÃO SAUDÁVEL.\n2. MANTIDA SUPLEMENTAÇÃO DE VITAMINA D E/OU FERRO CONFORME FAIXA ETÁRIA.\n3. REFORÇADA A IMPORTÂNCIA DA VACINAÇÃO.\n4. RETORNO AGENDADO PARA O PRÓXIMO MARCO DE IDADE.',
-    },
+    id: 'mulher',
+    categoria: 'MULHER',
+    titulo: 'MULHER',
+    descricao: 'SAÚDE DA MULHER, GINECOLOGIA E PRÉ-NATAL.',
+    icone: 'woman-outline',
+
+    subjetivo: `HDA: PACIENTE COMPARECE A CONSULTA 
+ISDA: NO MOMENTO, NEGA FEBRE, TOSSE, DOR TORÁCICA, DISPNEIA, DOR ABDOMINAL, DISÚRIA, EVACUAÇÕES LÍQUIDAS, E DEMAIS QUEIXAS. 
+INFORMA SONO REPARADOR 
+FUNÇÕES FISIOLÓGICAS PRESERVADAS. 
+HPP: NEGA COMORBIDADES. 
+NEGA ALERGIAS MEDICAMENTOSAS. 
+IMED: NEGA MEDICAMENTOS DE USO CONTÍNUO. 
+HSV:  (TABAGISMO,ETILISMO,USO DE DROGAS, ATIVIDADE FÍSICA, ALIMENTAÇÃO, CONDIÇÕES DE MORADIA
+HGO: 
+HF:
+`,
+
+    objetivo: `BOM ESTADO GERAL, LÚCIDA E ORIENTADA NO TEMPO E ESPAÇO, AFEBRIL, EUPNEICA, NORMOCÁRDICA, NORMOCORADA, HIDRATADA, ACIANÓTICA, ANICTERICA; GLASGOW 15 OROFARINGE SEM SINAIS FLOGÍSTICOS, LESÕES E PLACAS; 
+AR: MURMÚRIO VESICULAR PRESERVADO BILATERALMENTE, SEM RUÍDOS ADVENTÍCIOS; 
+AC: RITMO CARDÍACO REGULAR EM 2 TEMPOS, BULHAS NORMOFONÉTICAS, SEM SOPROS; 
+ABDOME: ATÍPICO, RUÍDOS HIDROAÉREOS PRESENTES, FLÁCIDO, INDOLOR A PALPAÇÃO; MEMBROS SIMÉTRICOS SEM LESÕES E SINAIS FLOGÍSTICOS; PANTURRILHAS LIVRES; MOBILIDADE FACIAL, FORÇA MUSCULAR E MARCHA PRESERVADOS.
+`,
+
+    avaliacao: ``,
+
+    plano: `ORIENTAÇÕES GERAIS 
+ORIENTO RETORNO SE PERSISTÊNCIA DE SINTOMAS 
+ORIENTO PROCURAR ATENDIMENTO DE URGÊNCIA SE PIORA DE SINTOMAS PRESCREVO
+`
   },
 
-  // --- CLÍNICA GERAL ---
   {
-    id: '6',
-    titulo: 'CONSULTA AMBULATORIAL GERAL / RENOVAÇÃO DE RECEITA',
-    categoria: 'geral',
-    descricao: 'Atendimento geral e acompanhamento contínuo de condições crônicas.',
-    soap: {
-      subjetivo:
-        'PACIENTE REFERE CONSULTA PARA RENOVAÇÃO DE RECEITAS E ACOMPANHAMENTO. RELATA BOA ADESÃO AO TRATAMENTO. NEGA NOVOS SINTOMAS OU INTERCORRÊNCIAS NO PERÍODO.',
-      objetivo:
-        'BEG, LOTE, CORADO, HIDRATAÇÃO PRESERVADA.\nPA: [120X80] MMHG | FC: [70] BPM.\nEXAME FÍSICO SEGMENTAR SEM ANORMALIDADES DETECTÁVEIS.',
-      avaliacao:
-        '1. ACOMPANHAMENTO CLÍNICO DE ROTINA.',
-      plano:
-        '1. MANTIDAS MEDICAÇÕES DE USO CONTÍNUO.\n2. RENOVAÇÃO DE RECEITAS PARA [X] MESES.\n3. SOLICITADOS EXAMES LABORATORIAIS DE ACOMPANHAMENTO.',
-    },
+    id: 'idoso',
+    categoria: 'IDOSO',
+    titulo: 'IDOSO',
+    descricao: 'AVALIAÇÃO GERIÁTRICA, FUNCIONALIDADE E POLIFARMÁCIA.',
+    icone: 'person-outline',
+
+    subjetivo: `QP:
+[QUEIXA PRINCIPAL DO PACIENTE/ACOMPANHANTE]
+
+HDA:
+PACIENTE/ACOMPANHANTE RELATA [QUEIXA]. DESCREVER INÍCIO, EVOLUÇÃO, CARACTERÍSTICAS, SINTOMAS ASSOCIADOS, EPISÓDIOS ANTERIORES E TRATAMENTOS REALIZADOS.
+
+ISDA:
+[DESCREVER SINTOMAS RELEVANTES].
+
+HPP:
+HAS, DM, CARDIOPATIAS, DPOC, DOENÇAS NEUROLÓGICAS, NEOPLASIAS, INTERNAÇÕES, CIRURGIAS E ALERGIAS: [ ].
+
+IMED:
+[NOME / DOSE / VIA / FREQUÊNCIA / ADESÃO].
+
+HSV:
+TABAGISMO: [ ].
+ETILISMO: [ ].
+ATIVIDADE FÍSICA: [ ].
+ALIMENTAÇÃO: [ ].
+MORADIA: [ ].
+REDE DE APOIO: [ ].
+
+FUNCIONALIDADE:
+AVDS: [ ].
+AIVDS: [ ].
+QUEDAS: [ ].
+MARCHA: [ ].
+COGNIÇÃO: [ ].
+HUMOR: [ ].
+
+HF:
+[HISTÓRIA FAMILIAR RELEVANTE].`,
+
+    objetivo: `ESTADO GERAL:
+[DESCREVER].
+
+SINAIS VITAIS:
+PA: [ ] | FC: [ ] | FR: [ ] | SPO2: [ ] | TEMP: [ ].
+
+AR:
+[ ].
+
+AC:
+[ ].
+
+ABDOME:
+[ ].
+
+MMII:
+[ ].
+
+MARCHA:
+[PRESERVADA / ALTERADA].
+
+FORÇA MUSCULAR:
+[ ].
+
+EXAME NEUROLÓGICO:
+[ ].
+
+COGNIÇÃO:
+[ ].`,
+
+    avaliacao: `1. ACOMPANHAMENTO DA PESSOA IDOSA.
+2. POLIFARMÁCIA: [SIM / NÃO].
+3. RISCO DE QUEDAS: [ ].
+4. FRAGILIDADE: [ ].
+5. [OUTROS PROBLEMAS].`,
+
+    plano: `1. REVISAR MEDICAÇÕES E POSOLOGIAS.
+2. AVALIAR POLIFARMÁCIA.
+3. AVALIAR RISCO DE QUEDAS.
+4. AVALIAR COGNIÇÃO, HUMOR, NUTRIÇÃO E FUNCIONALIDADE.
+5. EXAMES CONFORME INDICAÇÃO.
+6. ORIENTAÇÕES.
+7. RETORNO.`
   },
 
-  // --- PRONTO ATENDIMENTO ---
   {
-    id: '7',
-    titulo: 'ATENDIMENTO DE FARINGOAMIGDALITE AGUDA',
-    categoria: 'emergencia',
-    descricao: 'Avaliação e conduta rápida para dor de garganta no PA.',
-    soap: {
-      subjetivo:
-        'PACIENTE PROCURA PA COM QUEIXA DE ODINOFAGIA INTENSA E FEBRE (38.5°C) HÁ 2 DIAS. REFERE CALAFRIOS E ASTENIA. NEGA TOSSE OU CORIZA.',
-      objetivo:
-        'BEG, FEBRIL AO TOQUE, HIDRATADO.\nOROSCOPIA: AMÍGDALAS HIPEREMIADAS E HIPERTRÓFICAS (3+/4+) COM EXSUDATO PURULENTO EM PLACAS. LINFONODOMEGALIA SUBMANDIBULAR DOLOROSA À PALPAÇÃO.\nAUSCULTA PULMONAR: MV SEM RUÍDOS.',
-      avaliacao:
-        '1. FARINGOAMIGDALITE BACTERIANA AGUDA (ESCORE CENTOR/MCISAAC POSITIVO) - CID-10: J03.9.',
-      plano:
-        '1. ANALGESIA / ANTI-INFLAMATÓRIO.\n2. ANTIBIOTICOTERAPIA (EX: AMOXICILINA OU PENICILINA BENZATINA SE INDICAÇÃO/ADESÃO).\n3. ORIENTAÇÕES DE REPOUSO, HIDRATAÇÃO E SINAIS DE COMPLICAÇÃO (TRISMO, ASSIMETRIA DE ÚVULA).',
-    },
-  },
+    id: 'geral',
+    categoria: 'GERAL',
+    titulo: 'CONSULTA GERAL',
+    descricao: 'MODELO BASE PARA CONSULTA CLÍNICA.',
+    icone: 'medkit-outline',
+
+    subjetivo: `QP:
+[QUEIXA PRINCIPAL NAS PALAVRAS DO PACIENTE]
+
+HDA:
+PACIENTE REFERE [QUEIXA]. DESCREVER CRONOLOGICAMENTE INÍCIO, EVOLUÇÃO, LOCALIZAÇÃO, INTENSIDADE, CARACTERÍSTICAS, FATORES DE MELHORA/PIORA, SINTOMAS ASSOCIADOS, EPISÓDIOS SEMELHANTES, ATENDIMENTO PRÉVIO E MEDICAÇÕES UTILIZADAS.
+
+ISDA:
+[DESCREVER SINTOMAS RELEVANTES].
+
+HPP:
+COMORBIDADES, DOENÇAS PRÉVIAS, INTERNAÇÕES, CIRURGIAS E ALERGIAS: [ ].
+
+IMED:
+[NOME / DOSE / VIA / FREQUÊNCIA / ADESÃO].
+
+HSV:
+TABAGISMO: [ ].
+ETILISMO: [ ].
+DROGAS: [ ].
+ATIVIDADE FÍSICA: [ ].
+ALIMENTAÇÃO: [ ].
+MORADIA: [ ].
+TRABALHO: [ ].
+
+HF:
+[HISTÓRIA FAMILIAR RELEVANTE].`,
+
+    objetivo: `ESTADO GERAL:
+[DESCREVER].
+
+SINAIS VITAIS:
+PA: [ ] | FC: [ ] | FR: [ ] | SPO2: [ ] | TEMP: [ ].
+
+OROFARINGE:
+[ ].
+
+AR:
+[ ].
+
+AC:
+[ ].
+
+ABDOME:
+[ ].
+
+MMII:
+[ ].
+
+EXAME FÍSICO DIRECIONADO:
+[DESCREVER ACHADOS RELACIONADOS À QUEIXA].`,
+
+    avaliacao: `1. [DIAGNÓSTICO / HIPÓTESE PRINCIPAL].
+2. [DIAGNÓSTICO / PROBLEMA SECUNDÁRIO].
+3. [OUTROS PROBLEMAS].
+4. [DIAGNÓSTICO DIFERENCIAL].`,
+
+    plano: `1. ORIENTAÇÕES GERAIS.
+2. EXAMES COMPLEMENTARES SE INDICADOS.
+3. MEDICAÇÕES / AJUSTES.
+4. MEDIDAS NÃO FARMACOLÓGICAS.
+5. SINAIS DE ALARME.
+6. RETORNO.
+7. ENCAMINHAMENTO SE NECESSÁRIO.`
+  }
 ];
 
+
+// ============================================================
+// TELA PRINCIPAL
+// ============================================================
+
 export default function ModelosSoapScreen() {
+
   const [busca, setBusca] = useState('');
-  const [categoriaAtiva, setCategoriaAtiva] = useState('todas');
-  const [modeloSelecionado, setModeloSelecionado] = useState(null);
+  const [filtro, setFiltro] = useState('TODAS');
+  const [modelo, setModelo] = useState(null);
 
-  const scrollRef = useRef(null);
+  const lista = useMemo(() => {
 
-  const modelosFiltrados = useMemo(() => {
-    return MODELOS_SOAP.filter((item) => {
-      const matchCat =
-        categoriaAtiva === 'todas' || item.categoria === categoriaAtiva;
-      const matchBusca =
-        item.titulo.toLowerCase().includes(busca.trim().toLowerCase()) ||
-        item.descricao.toLowerCase().includes(busca.trim().toLowerCase());
-      return matchCat && matchBusca;
+    const termo = busca.toLowerCase().trim();
+
+    return MODELOS.filter(item => {
+
+      const categoriaOk =
+        filtro === 'TODAS' ||
+        item.categoria === filtro;
+
+      const buscaOk =
+        !termo ||
+        item.titulo.toLowerCase().includes(termo) ||
+        item.descricao.toLowerCase().includes(termo);
+
+      return categoriaOk && buscaOk;
     });
-  }, [busca, categoriaAtiva]);
 
-  if (modeloSelecionado) {
+  }, [busca, filtro]);
+
+
+  if (modelo) {
+
     return (
-      <VisualizarSoap
-        modeloInicial={modeloSelecionado}
-        onVoltar={() => setModeloSelecionado(null)}
+      <TelaSoap
+        modelo={modelo}
+        voltar={() => setModelo(null)}
       />
     );
+
   }
+
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Busca */}
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color="#7A7A7A" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="BUSCAR SOAP (EX: IDOSO, PUERICULTURA, PRÉ-NATAL)..."
-          placeholderTextColor="#999"
-          value={busca}
-          onChangeText={setBusca}
-        />
-        {busca.length > 0 && (
-          <TouchableOpacity onPress={() => setBusca('')}>
-            <Ionicons name="close-circle" size={18} color="#999" />
-          </TouchableOpacity>
-        )}
-      </View>
 
-      {/* Categorias / Filtros Demográficos */}
-      <View style={styles.chipsRow}>
-        <TouchableOpacity
-          style={styles.setaButton}
-          onPress={() => scrollRef.current?.scrollTo({ x: -160, animated: true })}
-        >
-          <Ionicons name="chevron-back" size={18} color="#5B1982" />
-        </TouchableOpacity>
+      {/* LISTA */}
 
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.chipsContainer}
-          contentContainerStyle={{ paddingHorizontal: 4 }}
-        >
-          {Object.keys(CATEGORIAS).map((key) => (
-            <TouchableOpacity
-              key={key}
-              style={[
-                styles.chip,
-                categoriaAtiva === key && styles.chipAtivo,
-              ]}
-              onPress={() => setCategoriaAtiva(key)}
-            >
-              <Text
-                style={[
-                  styles.chipTexto,
-                  categoriaAtiva === key && styles.chipTextoAtivo,
-                ]}
-              >
-                {CATEGORIAS[key].toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <TouchableOpacity
-          style={styles.setaButton}
-          onPress={() => scrollRef.current?.scrollTo({ x: 160, animated: true })}
-        >
-          <Ionicons name="chevron-forward" size={18} color="#5B1982" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Lista de Cards */}
       <FlatList
-        data={modelosFiltrados}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16, paddingTop: 6 }}
-        ListEmptyComponent={
-          <View style={styles.vazioWrap}>
-            <Ionicons name="document-text-outline" size={40} color="#CCC" />
-            <Text style={styles.vazioTexto}>NENHUM MODELO ENCONTRADO</Text>
-          </View>
-        }
+        data={lista}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.lista}
+
         renderItem={({ item }) => (
+
           <TouchableOpacity
             style={styles.card}
-            activeOpacity={0.7}
-            onPress={() => setModeloSelecionado(item)}
+            activeOpacity={0.75}
+            onPress={() => setModelo(item)}
           >
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <View style={styles.tagCategoriaWrap}>
-                <Text style={styles.tagCategoriaTexto}>
-                  {(CATEGORIAS[item.categoria] || item.categoria).toUpperCase()}
-                </Text>
-              </View>
-              <Text style={styles.cardTitulo}>{item.titulo}</Text>
-              <Text style={styles.cardDescricao}>{item.descricao}</Text>
+
+            <View style={styles.icone}>
+
+              <Ionicons
+                name={item.icone}
+                size={25}
+                color="#5B1982"
+              />
+
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#5B1982" />
+
+
+            <View style={styles.cardTexto}>
+
+              <Text style={styles.cardTitulo}>
+                {item.titulo}
+              </Text>
+
+              <Text style={styles.cardDescricao}>
+                {item.descricao}
+              </Text>
+
+            </View>
+
+
+            <Ionicons
+              name="chevron-forward"
+              size={21}
+              color="#5B1982"
+            />
+
           </TouchableOpacity>
+
         )}
       />
+
     </SafeAreaView>
   );
 }
 
-// Tela de Visualização e Edição Detalhada com IA
-function VisualizarSoap({ modeloInicial, onVoltar }) {
-  const [subjetivo, setSubjetivo] = useState(modeloInicial.soap.subjetivo);
-  const [objetivo, setObjetivo] = useState(modeloInicial.soap.objetivo);
-  const [avaliacao, setAvaliacao] = useState(modeloInicial.soap.avaliacao);
-  const [plano, setPlano] = useState(modeloInicial.soap.plano);
 
-  const [copiado, setCopiado] = useState(false);
-  const [carregandoIA, setCarregandoIA] = useState(false);
+// ============================================================
+// TELA DO SOAP
+// ============================================================
 
-  // Função para chamar a Inteligência Artificial e aprimorar a HDA
-  const handleAprimorarHDA = async () => {
-    if (!subjetivo.trim()) return;
+function TelaSoap({ modelo, voltar }) {
 
-    setCarregandoIA(true);
+  const [subjetivo, setSubjetivo] =
+    useState(modelo.subjetivo);
+
+  const [objetivo, setObjetivo] =
+    useState(modelo.objetivo);
+
+  const [avaliacao, setAvaliacao] =
+    useState(modelo.avaliacao);
+
+  const [plano, setPlano] =
+    useState(modelo.plano);
+
+  const [iaCarregando, setIaCarregando] =
+    useState(false);
+
+  const [copiado, setCopiado] =
+    useState(false);
+
+
+  // ==========================================================
+  // MELHORAR HDA
+  // ==========================================================
+
+  const handleMelhorarHDA = async () => {
+
+    if (!subjetivo || !subjetivo.trim()) {
+      Alert.alert(
+        'HDA VAZIA',
+        'Digite a história do paciente antes de usar a IA.'
+      );
+      return;
+    }
+
+    let hdaAtual = '';
+    let inicio = -1;
+    let depois = -1;
+    let fim = -1;
+
+    // Procura HDA: ignorando maiúsculas/minúsculas
+    const textoUpper = subjetivo.toUpperCase();
+
+    inicio = textoUpper.indexOf('HDA:');
+
+    // ==========================================================
+    // CASO 1: EXISTE "HDA:" NO MODELO
+    // ==========================================================
+
+    if (inicio !== -1) {
+
+      depois = inicio + 4;
+
+      fim = textoUpper.indexOf(
+        '\n\n',
+        depois
+      );
+
+      hdaAtual =
+        fim === -1
+          ? subjetivo.substring(depois).trim()
+          : subjetivo
+            .substring(depois, fim)
+            .trim();
+
+    }
+
+    // ==========================================================
+    // CASO 2: NÃO EXISTE "HDA:"
+    // USA TODO O TEXTO DIGITADO
+    // ==========================================================
+
+    else {
+
+      hdaAtual = subjetivo.trim();
+
+    }
+
+
+    if (!hdaAtual) {
+      Alert.alert(
+        'HDA VAZIA',
+        'Digite a história do paciente antes de usar a IA.'
+      );
+      return;
+    }
+
+
+    setIaCarregando(true);
+
+
     try {
-      const hdaMelhorada = await melhorarHDA(subjetivo, modeloInicial.titulo);
-      if (hdaMelhorada) {
-        setSubjetivo(hdaMelhorada.toUpperCase());
+
+      const novaHda = await melhorarHDA(
+        hdaAtual,
+        modelo.titulo
+      );
+
+
+      if (!novaHda) {
+        return;
       }
-    } catch (err) {
-      if (Platform.OS === 'web') {
-        alert('Erro ao conectar com a IA. Tente novamente.');
-      } else {
-        Alert.alert('Erro', 'Não foi possível se conectar à IA.');
+
+
+      // ========================================================
+      // SE NÃO EXISTIA "HDA:", SUBSTITUI TODO O TEXTO
+      // ========================================================
+
+      if (inicio === -1) {
+
+        setSubjetivo(
+          novaHda.toUpperCase()
+        );
+
       }
+
+
+      // ========================================================
+      // SE EXISTIA "HDA:", PRESERVA O RESTANTE DO SOAP
+      // ========================================================
+
+      else {
+
+        const novoSubjetivo =
+          fim === -1
+
+            ? subjetivo.substring(0, depois) +
+            '\n\n' +
+            novaHda
+
+            : subjetivo.substring(0, depois) +
+            '\n\n' +
+            novaHda +
+            subjetivo.substring(fim);
+
+
+        setSubjetivo(
+          novoSubjetivo.toUpperCase()
+        );
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        'Erro ao melhorar HDA:',
+        error
+      );
+
+      Alert.alert(
+        'ERRO',
+        'Não foi possível melhorar a HDA.'
+      );
+
     } finally {
-      setCarregandoIA(false);
+
+      setIaCarregando(false);
+
     }
+
   };
 
-  const executarCopia = async () => {
-    const textoFormatado = `[SUBJETIVO / HDA]\n${subjetivo}\n\n[OBJETIVO]\n${objetivo}\n\n[AVALIAÇÃO]\n${avaliacao}\n\n[PLANO]\n${plano}`.toUpperCase();
+  const gerarPlano = async () => {
+
+    setIaCarregando(true);
 
     try {
-      if (Platform.OS === 'web') {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(textoFormatado);
-        } else {
-          const textArea = document.createElement('textarea');
-          textArea.value = textoFormatado;
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textArea);
-        }
-      } else {
-        if (navigator.clipboard) {
-          await navigator.clipboard.writeText(textoFormatado);
-        }
+
+      const novoPlano = await formularPlano(
+        subjetivo,
+        objetivo,
+        avaliacao,
+        modelo.titulo
+      );
+
+      if (novoPlano) {
+        setPlano(novoPlano);
       }
 
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2500);
-    } catch (err) {
-      console.error('Falha ao copiar: ', err);
+    } catch (error) {
+
+      console.error(
+        'Erro ao formular plano:',
+        error
+      );
+
+      Alert.alert(
+        'ERRO',
+        'Não foi possível formular o plano.'
+      );
+
+    } finally {
+
+      setIaCarregando(false);
+
     }
   };
+
+
+  // ==========================================================
+  // COPIAR SOAP
+  // ==========================================================
+
+  const copiarSoap = async () => {
+
+    const texto = `
+SOAP — ${modelo.categoria}
+
+========================
+SUBJETIVO
+========================
+
+${subjetivo}
+
+========================
+OBJETIVO
+========================
+
+${objetivo}
+
+========================
+AVALIAÇÃO
+========================
+
+${avaliacao}
+
+========================
+PLANO
+========================
+
+${plano}
+`.trim().toUpperCase();
+
+
+    try {
+
+      if (
+        Platform.OS === 'web' &&
+        navigator.clipboard
+      ) {
+
+        await navigator.clipboard.writeText(
+          texto
+        );
+
+        setCopiado(true);
+
+        setTimeout(
+          () => setCopiado(false),
+          2000
+        );
+
+      } else {
+
+        Alert.alert(
+          'SOAP PRONTO',
+          'A cópia automática está disponível na versão web.'
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerDetalhe}>
-        <TouchableOpacity onPress={onVoltar} style={styles.botaoVoltar}>
-          <Ionicons name="arrow-back" size={24} color="#1A202C" />
+
+      <ScrollView
+        contentContainerStyle={styles.soapTela}
+        keyboardShouldPersistTaps="handled"
+      >
+
+        {/* VOLTAR */}
+
+        <TouchableOpacity
+          style={styles.voltar}
+          onPress={voltar}
+        >
+
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color="#5B1982"
+          />
+
+          <Text style={styles.voltarTexto}>
+            VOLTAR PARA MODELOS
+          </Text>
+
         </TouchableOpacity>
-        <Text style={styles.headerDetalheTitulo} numberOfLines={1}>
-          {modeloInicial.titulo}
-        </Text>
-      </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {/* Bloco S com Aprimoramento de IA */}
-        <SoapCardEditable
+
+        {/* TÍTULO */}
+
+        <View style={styles.tituloSoap}>
+
+          <View style={styles.iconeGrande}>
+
+            <Ionicons
+              name={modelo.icone}
+              size={28}
+              color="#5B1982"
+            />
+
+          </View>
+
+          <View style={{ flex: 1 }}>
+
+            <Text style={styles.tituloSoapTexto}>
+              {modelo.titulo}
+            </Text>
+
+            <Text style={styles.tituloSoapDescricao}>
+              {modelo.descricao}
+            </Text>
+
+          </View>
+
+        </View>
+
+
+        {/* ==================================================
+            S
+        ================================================== */}
+
+        <SoapCard
           letra="S"
-          titulo="SUBJETIVO / HDA"
+          titulo="SUBJETIVO"
           cor="#3B82F6"
-          conteudo={subjetivo}
-          onChangeConteudo={setSubjetivo}
-          botaoIA={
-            <TouchableOpacity
-              style={styles.botaoIa}
-              onPress={handleAprimorarHDA}
-              disabled={carregandoIA}
-            >
-              {carregandoIA ? (
-                <ActivityIndicator size="small" color="#FFF" />
-              ) : (
-                <>
-                  <Ionicons name="sparkles" size={14} color="#FFF" style={{ marginRight: 4 }} />
-                  <Text style={styles.botaoIaTexto}>MELHORAR HDA COM IA</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          }
-        />
+        >
 
-        <SoapCardEditable
+          <TextInput
+            style={[
+              styles.input,
+              styles.inputS
+            ]}
+            multiline
+            scrollEnabled={false}
+            value={subjetivo}
+            onChangeText={setSubjetivo}
+            textAlignVertical="top"
+            autoCapitalize="characters"
+          />
+
+
+          <TouchableOpacity
+            style={styles.botaoIA}
+            onPress={handleMelhorarHDA}
+            disabled={iaCarregando}
+          >
+
+            {iaCarregando ? (
+
+              <ActivityIndicator
+                color="#FFF"
+                size="small"
+              />
+
+            ) : (
+
+              <>
+                <Ionicons
+                  name="sparkles"
+                  size={16}
+                  color="#FFF"
+                />
+
+                <Text style={styles.botaoIATexto}>
+                  MELHORE
+                </Text>
+              </>
+
+            )}
+
+          </TouchableOpacity>
+
+        </SoapCard>
+
+
+        {/* ==================================================
+            O
+        ================================================== */}
+
+        <SoapCard
           letra="O"
           titulo="OBJETIVO"
           cor="#10B981"
-          conteudo={objetivo}
-          onChangeConteudo={setObjetivo}
-        />
-        <SoapCardEditable
+        >
+
+          <TextInput
+            style={[
+              styles.input,
+              styles.inputO
+            ]}
+            multiline
+            scrollEnabled={false}
+            value={objetivo}
+            onChangeText={setObjetivo}
+            textAlignVertical="top"
+            autoCapitalize="characters"
+          />
+
+        </SoapCard>
+
+
+        {/* ==================================================
+            A
+        ================================================== */}
+
+        <SoapCard
           letra="A"
           titulo="AVALIAÇÃO"
           cor="#F59E0B"
-          conteudo={avaliacao}
-          onChangeConteudo={setAvaliacao}
-        />
-        <SoapCardEditable
+        >
+
+          <TextInput
+            style={[
+              styles.input,
+              styles.inputA
+            ]}
+            multiline
+            scrollEnabled={false}
+            value={avaliacao}
+            onChangeText={setAvaliacao}
+            textAlignVertical="top"
+            autoCapitalize="characters"
+          />
+
+        </SoapCard>
+
+
+        {/* ==================================================
+            P
+        ================================================== */}
+
+        <SoapCard
           letra="P"
           titulo="PLANO"
           cor="#8B5CF6"
-          conteudo={plano}
-          onChangeConteudo={setPlano}
-        />
-
-        {/* Botão Dinâmico de Cópia */}
-        <TouchableOpacity
-          style={[styles.botaoCopiar, copiado && styles.botaoCopiado]}
-          onPress={executarCopia}
-          activeOpacity={0.8}
         >
+
+          <TextInput
+            style={[
+              styles.input,
+              styles.inputP
+            ]}
+            multiline
+            scrollEnabled={false}
+            value={plano}
+            onChangeText={setPlano}
+            textAlignVertical="top"
+            autoCapitalize="characters"
+          />
+
+          <TouchableOpacity
+            style={styles.botaoIA}
+            onPress={gerarPlano}
+            disabled={iaCarregando}
+            activeOpacity={0.8}
+          >
+            {iaCarregando ? (
+              <ActivityIndicator
+                color="#FFF"
+                size="small"
+              />
+            ) : (
+              <>
+                <Ionicons
+                  name="sparkles"
+                  size={16}
+                  color="#FFF"
+                />
+
+                <Text style={styles.botaoIATexto}>
+                  chora
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+        </SoapCard>
+
+        {/* COPIAR */}
+
+        <TouchableOpacity
+          style={[
+            styles.botaoCopiar,
+            copiado && styles.botaoCopiado
+          ]}
+          onPress={copiarSoap}
+        >
+
           <Ionicons
-            name={copiado ? 'checkmark-circle-outline' : 'copy-outline'}
+            name={
+              copiado
+                ? 'checkmark-circle'
+                : 'copy-outline'
+            }
             size={20}
             color="#FFF"
-            style={{ marginRight: 8 }}
           />
+
           <Text style={styles.botaoCopiarTexto}>
-            {copiado ? 'COPIADO PARA A ÁREA DE TRANSFERÊNCIA!' : 'COPIAR SOAP COMPLETO'}
+
+            {copiado
+              ? 'SOAP COPIADO!'
+              : 'COPIAR SOAP COMPLETO'}
+
           </Text>
+
         </TouchableOpacity>
+
       </ScrollView>
+
     </SafeAreaView>
   );
 }
 
-// Componente do Card SOAP Editável
-function SoapCardEditable({ letra, titulo, cor, conteudo, onChangeConteudo, botaoIA }) {
+
+// ============================================================
+// CARD SOAP
+// ============================================================
+
+function SoapCard({
+  letra,
+  titulo,
+  cor,
+  children
+}) {
+
   return (
+
     <View style={styles.soapCard}>
-      <View style={styles.soapHeaderRow}>
-        <View style={styles.soapTitleLeft}>
-          <View style={[styles.soapBadge, { backgroundColor: cor }]}>
-            <Text style={styles.soapBadgeTexto}>{letra}</Text>
-          </View>
-          <Text style={styles.soapTituloSection}>{titulo}</Text>
+
+      <View style={styles.soapCardHeader}>
+
+        <View
+          style={[
+            styles.badge,
+            { backgroundColor: cor }
+          ]}
+        >
+
+          <Text style={styles.badgeTexto}>
+            {letra}
+          </Text>
+
         </View>
 
-        {botaoIA && <View>{botaoIA}</View>}
+
+        <Text style={styles.soapCardTitulo}>
+          {titulo}
+        </Text>
+
       </View>
 
-      <TextInput
-        style={styles.soapInput}
-        multiline
-        value={conteudo}
-        onChangeText={onChangeConteudo}
-        autoCapitalize="characters"
-      />
+
+      {children}
+
     </View>
+
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
 
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    marginHorizontal: 16,
-    marginTop: 14,
-    marginBottom: 10,
-    paddingHorizontal: 12,
+// ============================================================
+// ESTILOS
+// ============================================================
+
+const styles = StyleSheet.create({
+
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+
+
+  // BUSCA
+
+  busca: {
     height: 44,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-  },
-  searchInput: { flex: 1, marginLeft: 8, fontSize: 12.5, color: '#2D3748' },
-
-  chipsRow: {
+    backgroundColor: '#FFF',
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 8,
-    marginBottom: 8,
   },
-  setaButton: { paddingHorizontal: 6, paddingVertical: 8 },
-  chipsContainer: { flex: 1, maxHeight: 38 },
-  chip: {
-    backgroundColor: '#EDF2F7',
+
+  buscaInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 12,
+    color: '#2D3748',
+  },
+
+
+  // FILTROS
+
+  filtrosScroll: {
+    flexGrow: 0,
+    height: 48,
+  },
+
+  filtros: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+
+  filtro: {
+    height: 34,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
     marginRight: 8,
+    borderRadius: 17,
+    backgroundColor: '#EDF2F7',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  chipAtivo: { backgroundColor: '#5B1982' },
-  chipTexto: { fontSize: 11.5, color: '#4A5568', fontWeight: '700' },
-  chipTextoAtivo: { color: '#FFF', fontWeight: '700' },
+
+  filtroAtivo: {
+    backgroundColor: '#5B1982',
+  },
+
+  filtroTexto: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#4A5568',
+  },
+
+  filtroTextoAtivo: {
+    color: '#FFF',
+  },
+
+
+  // LISTA
+
+  lista: {
+    padding: 16,
+    paddingTop: 4,
+  },
 
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
-    elevation: 1,
-  },
-  tagCategoriaWrap: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#F3E8FF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginBottom: 6,
-  },
-  tagCategoriaTexto: { fontSize: 10.5, fontWeight: '700', color: '#5B1982' },
-  cardTitulo: { fontSize: 13.5, fontWeight: '700', color: '#1A202C' },
-  cardDescricao: {
-    fontSize: 12,
-    color: '#718096',
-    marginTop: 3,
-    lineHeight: 16,
-  },
-
-  vazioWrap: { alignItems: 'center', justifyContent: 'center', paddingTop: 40 },
-  vazioTexto: { color: '#A0AEC0', marginTop: 8, fontSize: 13, fontWeight: '700' },
-
-  headerDetalhe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  botaoVoltar: { paddingRight: 12, paddingVertical: 4 },
-  headerDetalheTitulo: {
-    fontSize: 14.5,
-    fontWeight: '700',
-    color: '#1A202C',
-    flex: 1,
-  },
-  soapCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
+    borderRadius: 13,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-  },
-  soapHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  soapTitleLeft: {
+    padding: 14,
+    marginBottom: 11,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  soapBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
+
+  icone: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#F3E8FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 12,
   },
-  soapBadgeTexto: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
-  soapTituloSection: { fontSize: 14, fontWeight: '700', color: '#2D3748' },
-  soapInput: {
-    fontSize: 12.5,
-    color: '#4A5568',
-    lineHeight: 20,
-    fontWeight: '500',
-    minHeight: 80,
+
+  cardTexto: {
+    flex: 1,
+  },
+
+  cardTitulo: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#1A202C',
+  },
+
+  cardDescricao: {
+    fontSize: 10.5,
+    color: '#718096',
+    marginTop: 4,
+    lineHeight: 15,
+  },
+
+  letras: {
+    flexDirection: 'row',
+    marginTop: 7,
+  },
+
+  letra: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#5B1982',
+    backgroundColor: '#F3E8FF',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+
+
+  // TELA SOAP
+
+  soapTela: {
+    padding: 14,
+    paddingBottom: 30,
+  },
+
+  voltar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingVertical: 4,
+  },
+
+  voltarTexto: {
+    color: '#5B1982',
+    fontSize: 11,
+    fontWeight: '800',
+    marginLeft: 6,
+  },
+
+  tituloSoap: {
+    backgroundColor: '#FFF',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+
+  iconeGrande: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#F3E8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+
+  tituloSoapTexto: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#1A202C',
+  },
+
+  tituloSoapDescricao: {
+    fontSize: 10.5,
+    color: '#718096',
+    marginTop: 3,
+  },
+
+
+  // CARDS SOAP
+
+  soapCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    marginBottom: 13,
+  },
+
+  soapCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+
+  badge: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 9,
+  },
+
+  badgeTexto: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+
+  soapCardTitulo: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#2D3748',
+  },
+
+
+  // INPUTS
+
+  input: {
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#EDF2F7',
+    borderRadius: 9,
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+    fontSize: 12,
+    lineHeight: 19,
+    color: '#2D3748',
     textAlignVertical: 'top',
   },
 
-  botaoIa: {
-    backgroundColor: '#5B1982',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  botaoIaTexto: {
-    color: '#FFF',
-    fontSize: 10.5,
-    fontWeight: '700',
+  inputS: {
+    minHeight: 300,
   },
 
-  botaoCopiar: {
-    flexDirection: 'row',
+  inputO: {
+    minHeight: 220,
+  },
+
+  inputA: {
+    minHeight: 110,
+  },
+
+  inputP: {
+    minHeight: 150,
+  },
+
+
+  // IA
+
+  botaoIA: {
+    height: 40,
+    marginTop: 10,
+    borderRadius: 9,
     backgroundColor: '#5B1982',
-    paddingVertical: 14,
-    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 20,
   },
+
+  botaoIATexto: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '800',
+    marginLeft: 6,
+  },
+
+
+  // COPIAR
+
+  botaoCopiar: {
+    height: 48,
+    borderRadius: 11,
+    backgroundColor: '#5B1982',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+
   botaoCopiado: {
     backgroundColor: '#10B981',
   },
-  botaoCopiarTexto: { color: '#FFF', fontWeight: '700', fontSize: 14 },
+
+  botaoCopiarTexto: {
+    color: '#FFF',
+    fontSize: 12.5,
+    fontWeight: '900',
+    marginLeft: 8,
+  },
+
 });

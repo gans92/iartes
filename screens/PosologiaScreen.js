@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { RECEITAS } from './ReceitasData';
+import { RECEITAS } from './data/ReceitasData';
 
 // Função auxiliar para remover acentos e caracteres especiais
 const normalizeText = (text) => {

@@ -6,13 +6,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './screens/HomeScreen';
 import CalculadorasScreen from './screens/CalculadorasScreen';
 import SobreScreen from './screens/SobreScreen';
-import FuncaoRenalScreen from './screens/FuncaoRenalScreen';
-import GravidadePneumoniaScreen from './screens/GravidadePneumoniaScreen';
-import EscoreGlasgowScreen from './screens/EscoreGlasgowScreen';
-import DisturbiosAcidoBaseScreen from './screens/DisturbiosAcidoBaseScreen';
-import IdadeGestacionalScreen from './screens/IdadeGestacionalScreen';
-import RiscoCardiovascularScreen from './screens/RiscoCardiovascularScreen';
-import MrpaGlicemiaScreen from './screens/MrpaGlicemiaScreen';
+
+import FuncaoRenalScreen from './screens/calculadoras/FuncaoRenalScreen';
+import GravidadePneumoniaScreen from './screens/calculadoras/GravidadePneumoniaScreen';
+import EscoreGlasgowScreen from './screens/calculadoras/EscoreGlasgowScreen';
+import DisturbiosAcidoBaseScreen from './screens/calculadoras/DisturbiosAcidoBaseScreen';
+import IdadeGestacionalScreen from './screens/calculadoras/IdadeGestacionalScreen';
+import RiscoCardiovascularScreen from './screens/calculadoras/RiscoCardiovascularScreen';
+import MrpaGlicemiaScreen from './screens/calculadoras/MrpaGlicemiaScreen';
+
 import PosologiaScreen from './screens/PosologiaScreen';
 import TratamentoDoencasScreen from './screens/TratamentoDoencasScreen';
 import ModelosSoapScreen from './screens/ModelosSoapScreen';
@@ -26,6 +28,90 @@ const CORES = {
   ambar: '#8a5a1f',
   verde: '#1f7a5c',
 };
+
+// ============================================================
+// CONFIGURAÇÃO ÚNICA DE ROTAS
+// Adicionar uma tela nova = adicionar um objeto aqui.
+// Stack.Screen e o deep linking são gerados a partir disso,
+// então nunca ficam dessincronizados entre si.
+// ============================================================
+
+const ROTAS = [
+  {
+    name: 'FuncaoRenal',
+    component: FuncaoRenalScreen,
+    titulo: 'Avaliar Função Renal',
+    cor: CORES.azul,
+    path: 'funcao-renal',
+  },
+  {
+    name: 'GravidadePneumonia',
+    component: GravidadePneumoniaScreen,
+    titulo: 'Gravidade Pneumonia',
+    cor: CORES.vermelho,
+    path: 'gravidade-pneumonia',
+  },
+  {
+    name: 'EscoreGlasgow',
+    component: EscoreGlasgowScreen,
+    titulo: 'Escore de Glasgow',
+    cor: CORES.ambar,
+    path: 'escore-glasgow',
+  },
+  {
+    name: 'DisturbiosAcidoBase',
+    component: DisturbiosAcidoBaseScreen,
+    titulo: 'Distúrbios Ácido-Base',
+    cor: CORES.verde,
+    path: 'disturbios-acido-base',
+  },
+  {
+    name: 'IdadeGestacional',
+    component: IdadeGestacionalScreen,
+    titulo: 'Idade Gestacional',
+    cor: CORES.roxo,
+    path: 'idade-gestacional',
+  },
+  {
+    name: 'RiscoCardiovascular',
+    component: RiscoCardiovascularScreen,
+    titulo: 'Risco Cardiovascular',
+    cor: CORES.vermelho,
+    path: 'risco-cardiovascular',
+  },
+  {
+    name: 'MrpaGlicemia',
+    component: MrpaGlicemiaScreen,
+    titulo: 'Monitorização da Pressão Arterial',
+    cor: CORES.azul,
+    path: 'mrpa-glicemia',
+  },
+  {
+    name: 'Posologia',
+    component: PosologiaScreen,
+    titulo: 'Posologia de Medicamentos',
+    cor: CORES.azul,
+    path: 'posologia',
+  },
+  {
+    name: 'TratamentoDoencas',
+    component: TratamentoDoencasScreen,
+    titulo: 'Tratamento de Doenças',
+    cor: CORES.vermelho,
+    path: 'tratamento-doencas',
+  },
+  {
+    name: 'ModelosSoap',
+    component: ModelosSoapScreen,
+    titulo: 'Modelos de SOAP',
+    cor: CORES.roxo,
+    path: 'modelos-soap',
+  },
+];
+
+// Telas que não seguem o padrão de header colorido (Home some o header,
+// Calculadoras e Sobre usam roxo fixo) ficam fora do array ROTAS
+// e são declaradas manualmente abaixo — são exceções, não a regra.
 
 function headerOptions(cor, titulo) {
   return {
@@ -45,16 +131,8 @@ const linking = {
       Home: 'iartes',
       Calculadoras: 'calculadoras',
       Sobre: 'sobre',
-      FuncaoRenal: 'funcao-renal',
-      GravidadePneumonia: 'gravidade-pneumonia',
-      EscoreGlasgow: 'escore-glasgow',
-      DisturbiosAcidoBase: 'disturbios-acido-base',
-      RiscoCardiovascular: 'risco-cardiovascular',
-      IdadeGestacional: 'idade-gestacional',
-      MrpaGlicemia: 'mrpa-glicemia',
-      Posologia: 'posologia',
-      TratamentoDoencas: 'tratamento-doencas',
-      ModelosSoap: 'modelos-soap', // Adicionado ao deep linking
+      // Gerado a partir do array ROTAS — não precisa mais repetir na mão
+      ...Object.fromEntries(ROTAS.map((r) => [r.name, r.path])),
     },
   },
 };
@@ -85,57 +163,16 @@ function AppNavigator() {
           component={SobreScreen}
           options={headerOptions(CORES.roxo, 'Sobre ProConduta')}
         />
-        <Stack.Screen
-          name="FuncaoRenal"
-          component={FuncaoRenalScreen}
-          options={headerOptions(CORES.azul, 'Avaliar Função Renal')}
-        />
-        <Stack.Screen
-          name="GravidadePneumonia"
-          component={GravidadePneumoniaScreen}
-          options={headerOptions(CORES.vermelho, 'Gravidade Pneumonia')}
-        />
-        <Stack.Screen
-          name="EscoreGlasgow"
-          component={EscoreGlasgowScreen}
-          options={headerOptions(CORES.ambar, 'Escore de Glasgow')}
-        />
-        <Stack.Screen
-          name="DisturbiosAcidoBase"
-          component={DisturbiosAcidoBaseScreen}
-          options={headerOptions(CORES.verde, 'Distúrbios Ácido-Base')}
-        />
-        <Stack.Screen
-          name="IdadeGestacional"
-          component={IdadeGestacionalScreen}
-          options={headerOptions(CORES.roxo, 'Idade Gestacional')}
-        />
-        <Stack.Screen
-          name="RiscoCardiovascular"
-          component={RiscoCardiovascularScreen}
-          options={headerOptions(CORES.vermelho, 'Risco Cardiovascular')}
-        />
-        <Stack.Screen
-          name="MrpaGlicemia"
-          component={MrpaGlicemiaScreen}
-          options={headerOptions(CORES.azul, 'Monitorização da Pressão Arterial')}
-        />
-        <Stack.Screen
-          name="Posologia"
-          component={PosologiaScreen}
-          options={headerOptions(CORES.azul, 'Posologia de Medicamentos')}
-        />
-        <Stack.Screen
-          name="TratamentoDoencas"
-          component={TratamentoDoencasScreen}
-          options={headerOptions(CORES.vermelho, 'Tratamento de Doenças')}
-        />
-        {/* Nome padronizado para "ModelosSoap" sem espaço */}
-        <Stack.Screen
-          name="ModelosSoap"
-          component={ModelosSoapScreen}
-          options={headerOptions(CORES.roxo, 'Modelos de SOAP')}
-        />
+
+        {/* Geradas a partir do array ROTAS — adicionar tela nova = adicionar item lá em cima */}
+        {ROTAS.map((rota) => (
+          <Stack.Screen
+            key={rota.name}
+            name={rota.name}
+            component={rota.component}
+            options={headerOptions(rota.cor, rota.titulo)}
+          />
+        ))}
       </Stack.Navigator>
     </NavigationContainer>
   );
