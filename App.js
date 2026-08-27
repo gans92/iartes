@@ -118,11 +118,11 @@ const ROTAS = [
     path: 'prescricoes-pediatricas',
   },
   {
-    name: 'DipironaDose',
+    name: 'Dipirona',
     component: DipironaScreen,
     titulo: 'Dose de Dipirona',
     cor: CORES.azul,
-    path: 'dipirona-dose',
+    path: 'prescricoes-pediatricas/dipirona',
   }
 ];
 

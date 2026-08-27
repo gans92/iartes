@@ -7,13 +7,16 @@ import {
   SectionList,
   TouchableOpacity,
   SafeAreaView,
-  StatusBar,
+  Alert,
 } from 'react-native';
 
 /**
- * PediatricDosesListScreen
- * Tela de índice das doses pediátricas, organizadas por categoria.
- * Cada item navega para a tela de cálculo do medicamento (ex: DipironaDoseScreen).
+ * PrescricoesPediatricasScreen
+ * Índice das doses pediátricas, organizadas por categoria.
+ * Cada item navega para a tela de cálculo do medicamento (ex: DipironaScreen).
+ *
+ * Header (título + seta de voltar + cor) é o padrão do Stack.Navigator —
+ * não é desenhado aqui, ver options em App.js.
  */
 
 const SECTIONS = [
@@ -45,13 +48,14 @@ const SECTIONS = [
   },
 ];
 
-// Mapa de rotas por medicamento — telas ainda não criadas apontam para null
-// e caem no fallback (ainda sem cálculo disponível).
+// Rota registrada em App.js (dentro do array ROTAS) por medicamento.
+// Conforme for criando as próximas telas (Ibuprofeno, Paracetamol...),
+// adicione aqui E registre no array ROTAS em App.js.
 const ROUTES = {
-  dipirona: 'DipironaDose',
+  dipirona: 'Dipirona',
 };
 
-export default function PediatricDosesListScreen({ navigation }) {
+export default function PrescricoesPediatricasScreen({ navigation }) {
   const [query, setQuery] = useState('');
 
   const filteredSections = useMemo(() => {
@@ -68,22 +72,12 @@ export default function PediatricDosesListScreen({ navigation }) {
     if (route) {
       navigation.navigate(route);
     } else {
-      navigation.navigate('DoseComingSoon', { medication: item.name });
+      Alert.alert(item.name, 'Essa dose ainda não foi cadastrada.');
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backIcon}>{'‹'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Doses pediátricas</Text>
-        <View style={styles.backButton} />
-      </View>
-
       <View style={styles.searchWrapper}>
         <Text style={styles.searchIcon}>⌕</Text>
         <TextInput
@@ -122,30 +116,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 30,
-    color: '#37474F',
-    fontWeight: '400',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#37474F',
-  },
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -154,6 +124,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     paddingHorizontal: 18,
     height: 52,
+    marginTop: 16,
     marginBottom: 16,
   },
   searchIcon: {
