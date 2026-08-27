@@ -17,7 +17,10 @@ import MrpaGlicemiaScreen from './screens/calculadoras/MrpaGlicemiaScreen';
 
 import PosologiaScreen from './screens/PosologiaScreen';
 import TratamentoDoencasScreen from './screens/TratamentoDoencasScreen';
+import PrescricoesPediatricasScreen from './screens/PrescricoesPediatricasScreen';
 import ModelosSoapScreen from './screens/ModelosSoapScreen';
+
+import DipironaScreen from './screens/ped/DipironaScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -107,6 +110,20 @@ const ROTAS = [
     cor: CORES.roxo,
     path: 'modelos-soap',
   },
+  {
+    name: 'PrescricoesPediatricas',
+    component: PrescricoesPediatricasScreen,
+    titulo: 'Prescrições Pediátricas',
+    cor: CORES.verde,
+    path: 'prescricoes-pediatricas',
+  },
+  {
+    name: 'DipironaDose',
+    component: DipironaScreen,
+    titulo: 'Dose de Dipirona',
+    cor: CORES.azul,
+    path: 'dipirona-dose',
+  }
 ];
 
 // Telas que não seguem o padrão de header colorido (Home some o header,
@@ -163,6 +180,7 @@ function AppNavigator() {
           component={SobreScreen}
           options={headerOptions(CORES.roxo, 'Sobre ProConduta')}
         />
+         
 
         {/* Geradas a partir do array ROTAS — adicionar tela nova = adicionar item lá em cima */}
         {ROTAS.map((rota) => (
