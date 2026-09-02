@@ -20,7 +20,12 @@ import TratamentoDoencasScreen from './screens/TratamentoDoencasScreen';
 import PrescricoesPediatricasScreen from './screens/PrescricoesPediatricasScreen';
 import ModelosSoapScreen from './screens/ModelosSoapScreen';
 
+// Telas de dose pediátrica individuais, por medicamento
 import DipironaScreen from './screens/ped/DipironaScreen';
+import TramadolScreen from './screens/ped/TramadolScreen';
+import ParacetamolScreen from './screens/ped/ParacetamolScreen';
+import IbuprofenoScreen from './screens/ped/IbuprofenoScreen';
+import AcidoAcetilsalicilicoScreen from './screens/ped/AcidoAcetilsalicilicoScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -113,17 +118,46 @@ const ROTAS = [
   {
     name: 'PrescricoesPediatricas',
     component: PrescricoesPediatricasScreen,
-    titulo: 'Prescrições Pediátricas',
+    titulo: 'Doses Pediátricas',
     cor: CORES.verde,
     path: 'prescricoes-pediatricas',
   },
   {
     name: 'Dipirona',
     component: DipironaScreen,
-    titulo: 'Dose de Dipirona',
-    cor: CORES.azul,
+    titulo: 'Dipirona',
+    cor: CORES.verde,
     path: 'prescricoes-pediatricas/dipirona',
-  }
+  },
+  {
+    name: 'Tramadol',
+    component: TramadolScreen,
+    titulo: 'Tramadol',
+    cor: CORES.verde,
+    path: 'prescricoes-pediatricas/tramadol',
+  },
+  {
+    name: 'Paracetamol',
+    component: ParacetamolScreen,
+    titulo: 'Paracetamol',
+    cor: CORES.verde,
+    path: 'prescricoes-pediatricas/paracetamol',
+  },
+  {
+    name: 'Ibuprofeno',
+    component: IbuprofenoScreen,
+    titulo: 'Ibuprofeno',
+    cor: CORES.verde,
+    path: 'prescricoes-pediatricas/ibuprofeno',
+  },
+  {
+    name: 'AcidoAcetilsalicilico',
+    component: AcidoAcetilsalicilicoScreen,
+    titulo: 'Ácido Acetilsalicílico',
+    cor: CORES.verde,
+    path: 'prescricoes-pediatricas/acido-acetilsalicilico',
+  },
+  // Próximas doses pediátricas entram aqui do mesmo jeito
 ];
 
 // Telas que não seguem o padrão de header colorido (Home some o header,
@@ -180,7 +214,6 @@ function AppNavigator() {
           component={SobreScreen}
           options={headerOptions(CORES.roxo, 'Sobre ProConduta')}
         />
-         
 
         {/* Geradas a partir do array ROTAS — adicionar tela nova = adicionar item lá em cima */}
         {ROTAS.map((rota) => (

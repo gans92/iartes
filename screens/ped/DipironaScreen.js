@@ -36,6 +36,15 @@ const SBP_MIN = 10;
 const SBP_MAX = 16;
 const MAX_DAILY_G = 4;
 
+// Limites por dose, por apresentação
+const MAX_DROPS = 40;
+const MAX_ML_XAROPE = 15;
+const MAX_ML_INJETAVEL = 2;
+
+function roundToStep(value, step) {
+  return Math.round(value / step) * step;
+}
+
 export default function DipironaScreen() {
   const [weightInput, setWeightInput] = useState('23');
 
@@ -48,6 +57,21 @@ export default function DipironaScreen() {
     const drops = Math.round(targetMg / MG_PER_DROP);
     const actualMg = drops * MG_PER_DROP;
     return Math.round(actualMg / weight);
+  }, [weight, isValidWeight]);
+
+  const doses = useMemo(() => {
+    if (!isValidWeight) return null;
+    const targetMg = TARGET_MG_PER_KG * weight;
+
+    const drops = Math.min(Math.round(targetMg / MG_PER_DROP), MAX_DROPS);
+    const xaropeMl = Math.min(roundToStep(targetMg / 50, 0.5), MAX_ML_XAROPE);
+    const injetavelMl = Math.min(roundToStep(targetMg / 500, 0.1), MAX_ML_INJETAVEL);
+
+    return {
+      drops,
+      xaropeMl: xaropeMl.toFixed(1).replace(/\.0$/, ''),
+      injetavelMl: injetavelMl.toFixed(1),
+    };
   }, [weight, isValidWeight]);
 
   return (
@@ -82,6 +106,36 @@ export default function DipironaScreen() {
             </View>
             <Text style={styles.weightUnit}>kg</Text>
           </View>
+        </View>
+
+        {/* Posologia por apresentação */}
+        <View style={styles.formulationsBlock}>
+          <FormulationSection
+            heading="Solução oral (gotas) 500 mg/mL (25 mg/gota):"
+            highlighted={doses ? `${doses.drops} gotas` : '00 gotas'}
+            instruction="via oral a cada 6 horas se dor ou febre"
+            subItems={[
+              `dose máxima de ${MAX_DROPS} gotas por dose`,
+              'apresentação em bisnagas gotejadoras com 10 ou 20 mL',
+            ]}
+          />
+
+          <FormulationSection
+            heading="Solução oral (xarope) 50 mg/mL:"
+            highlighted={doses ? `${doses.xaropeMl} mL` : '00 mL'}
+            instruction="via oral a cada 6 horas se dor ou febre"
+            subItems={[
+              `dose máxima de ${MAX_ML_XAROPE} mL por dose`,
+              'apresentação em frasco com 100 mL',
+            ]}
+          />
+
+          <FormulationSection
+            heading="Solução injetável 500 mg/mL:"
+            highlighted={doses ? `${doses.injetavelMl} mL` : '00 mL'}
+            instruction="intramuscular ou endovenoso a cada 6 horas se dor ou febre"
+            subItems={[`dose máxima de ${MAX_ML_INJETAVEL} mL por dose`]}
+          />
         </View>
 
         {/* Observações */}
@@ -123,6 +177,28 @@ export default function DipironaScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function FormulationSection({ heading, highlighted, instruction, subItems }) {
+  return (
+    <View style={styles.formulationSection}>
+      <Text style={styles.formulationHeading}>{heading}</Text>
+
+      <View style={styles.bulletRow}>
+        <Text style={styles.bulletDot}>•</Text>
+        <Text style={styles.bulletText}>
+          <Text style={styles.highlight}>{highlighted}</Text> {instruction}
+        </Text>
+      </View>
+
+      {subItems.map((text) => (
+        <View key={text} style={styles.subBulletRow}>
+          <Text style={styles.subBulletDot}>•</Text>
+          <Text style={styles.subBulletText}>{text}</Text>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -221,6 +297,60 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#1A1D29',
+  },
+  formulationsBlock: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  formulationSection: {
+    marginBottom: 24,
+  },
+  formulationHeading: {
+    fontSize: 17,
+    color: '#37474F',
+    marginBottom: 14,
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  bulletDot: {
+    fontSize: 16,
+    color: '#37474F',
+    marginRight: 10,
+    lineHeight: 24,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 17,
+    color: '#37474F',
+    lineHeight: 24,
+  },
+  highlight: {
+    backgroundColor: '#FFD966',
+    fontWeight: '700',
+    borderRadius: 4,
+    // padding não funciona em Text aninhado no Android; se precisar do
+    // respiro visual, envolva o texto num <View><Text> separado.
+  },
+  subBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingLeft: 24,
+    marginBottom: 6,
+  },
+  subBulletDot: {
+    fontSize: 13,
+    color: '#8FA0A6',
+    marginRight: 10,
+    lineHeight: 21,
+  },
+  subBulletText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#5F6368',
+    lineHeight: 21,
   },
   observationsBlock: {
     paddingHorizontal: 20,

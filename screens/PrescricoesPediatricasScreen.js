@@ -53,6 +53,10 @@ const SECTIONS = [
 // adicione aqui E registre no array ROTAS em App.js.
 const ROUTES = {
   dipirona: 'Dipirona',
+  tramadol: 'Tramadol',
+  paracetamol: 'Paracetamol',
+  ibuprofeno: 'Ibuprofeno',
+  aas: 'AcidoAcetilsalicilico',
 };
 
 export default function PrescricoesPediatricasScreen({ navigation }) {
