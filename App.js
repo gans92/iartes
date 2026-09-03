@@ -1,43 +1,27 @@
 import React from 'react';
-
 import { StatusBar, View, Platform, StyleSheet } from 'react-native';
-
 import { NavigationContainer } from '@react-navigation/native';
-
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from './screens/HomeScreen';
-
 import CalculadorasScreen from './screens/CalculadorasScreen';
-
 import SobreScreen from './screens/SobreScreen';
 
 import FuncaoRenalScreen from './screens/calculadoras/FuncaoRenalScreen';
-
 import GravidadePneumoniaScreen from './screens/calculadoras/GravidadePneumoniaScreen';
-
 import EscoreGlasgowScreen from './screens/calculadoras/EscoreGlasgowScreen';
-
 import DisturbiosAcidoBaseScreen from './screens/calculadoras/DisturbiosAcidoBaseScreen';
-
 import IdadeGestacionalScreen from './screens/calculadoras/IdadeGestacionalScreen';
-
 import RiscoCardiovascularScreen from './screens/calculadoras/RiscoCardiovascularScreen';
-
 import MrpaGlicemiaScreen from './screens/calculadoras/MrpaGlicemiaScreen';
 
 import PosologiaScreen from './screens/PosologiaScreen';
-
 import TratamentoDoencasScreen from './screens/TratamentoDoencasScreen';
-
-import PrescricoesPediatricasScreen from './screens/PrescricoesPediatricasScreen';
-
 import ModelosSoapScreen from './screens/ModelosSoapScreen';
 
-import GeradorSoapScreen from './screens/GeradorSOAPScreen';
-
-// Tela única de dose pediátrica
+import PrescricoesPediatricasScreen from './screens/PrescricoesPediatricasScreen';
 import CalculadoraDoseScreen from './screens/ped/CalculadoraDoseScreen';
+import GeradorSoapScreen from './screens/GeradorSOAPScreen';
 
 import { medicamentos } from './screens/ped/MedicamentosData';
 
@@ -51,10 +35,6 @@ const CORES = {
   verde: '#1f7a5c',
 };
 
-// ============================================================
-// CONFIGURAÇÃO ÚNICA DE ROTAS
-// ============================================================
-
 const ROTAS = [
   {
     name: 'FuncaoRenal',
@@ -63,7 +43,6 @@ const ROTAS = [
     cor: CORES.azul,
     path: 'funcao-renal',
   },
-
   {
     name: 'GravidadePneumonia',
     component: GravidadePneumoniaScreen,
@@ -71,7 +50,6 @@ const ROTAS = [
     cor: CORES.vermelho,
     path: 'gravidade-pneumonia',
   },
-
   {
     name: 'EscoreGlasgow',
     component: EscoreGlasgowScreen,
@@ -79,7 +57,6 @@ const ROTAS = [
     cor: CORES.ambar,
     path: 'escore-glasgow',
   },
-
   {
     name: 'DisturbiosAcidoBase',
     component: DisturbiosAcidoBaseScreen,
@@ -87,7 +64,6 @@ const ROTAS = [
     cor: CORES.verde,
     path: 'disturbios-acido-base',
   },
-
   {
     name: 'IdadeGestacional',
     component: IdadeGestacionalScreen,
@@ -95,7 +71,6 @@ const ROTAS = [
     cor: CORES.roxo,
     path: 'idade-gestacional',
   },
-
   {
     name: 'RiscoCardiovascular',
     component: RiscoCardiovascularScreen,
@@ -103,7 +78,6 @@ const ROTAS = [
     cor: CORES.vermelho,
     path: 'risco-cardiovascular',
   },
-
   {
     name: 'MrpaGlicemia',
     component: MrpaGlicemiaScreen,
@@ -111,7 +85,6 @@ const ROTAS = [
     cor: CORES.azul,
     path: 'mrpa-glicemia',
   },
-
   {
     name: 'Posologia',
     component: PosologiaScreen,
@@ -119,7 +92,6 @@ const ROTAS = [
     cor: CORES.azul,
     path: 'posologia',
   },
-
   {
     name: 'TratamentoDoencas',
     component: TratamentoDoencasScreen,
@@ -127,7 +99,6 @@ const ROTAS = [
     cor: CORES.vermelho,
     path: 'tratamento-doencas',
   },
-
   {
     name: 'ModelosSoap',
     component: ModelosSoapScreen,
@@ -135,7 +106,6 @@ const ROTAS = [
     cor: CORES.roxo,
     path: 'modelos-soap',
   },
-
   {
     name: 'PrescricoesPediatricas',
     component: PrescricoesPediatricasScreen,
@@ -144,10 +114,6 @@ const ROTAS = [
     path: 'prescricoes-pediatricas',
   },
 ];
-
-// ============================================================
-// HEADER
-// ============================================================
 
 function headerOptions(cor, titulo) {
   return {
@@ -165,10 +131,6 @@ function headerOptions(cor, titulo) {
   };
 }
 
-// ============================================================
-// DEEP LINKING
-// ============================================================
-
 const linking = {
   prefixes: [
     'https://gans92.github.io/iartes',
@@ -180,26 +142,19 @@ const linking = {
       Home: 'iartes',
       Calculadoras: 'calculadoras',
       Sobre: 'sobre',
-
       CalculadoraDose: 'prescricoes-pediatricas/:medicamentoId',
-
       GeradorSoap: 'gerador-soap',
 
       ...Object.fromEntries(
-        ROTAS.map((r) => [r.name, r.path])
+        ROTAS.map((rota) => [rota.name, rota.path])
       ),
     },
   },
 };
 
-// ============================================================
-// NAVEGAÇÃO
-// ============================================================
-
 function AppNavigator() {
   return (
     <NavigationContainer linking={linking}>
-
       <StatusBar
         barStyle="light-content"
         backgroundColor={CORES.roxo}
@@ -212,9 +167,6 @@ function AppNavigator() {
           animation: 'slide_from_right',
         }}
       >
-
-        {/* HOME */}
-
         <Stack.Screen
           name="Home"
           component={HomeScreen}
@@ -222,8 +174,6 @@ function AppNavigator() {
             headerShown: false,
           }}
         />
-
-        {/* CALCULADORAS */}
 
         <Stack.Screen
           name="Calculadoras"
@@ -234,8 +184,6 @@ function AppNavigator() {
           )}
         />
 
-        {/* SOBRE */}
-
         <Stack.Screen
           name="Sobre"
           component={SobreScreen}
@@ -245,18 +193,12 @@ function AppNavigator() {
           )}
         />
 
-        {/* =====================================================
-            CALCULADORA DE DOSE PEDIÁTRICA
-            ===================================================== */}
-
         <Stack.Screen
           name="CalculadoraDose"
           component={CalculadoraDoseScreen}
           options={({ route }) => {
             const medicamento =
-              medicamentos[
-                route.params?.medicamentoId
-              ];
+              medicamentos[route.params?.medicamentoId];
 
             return headerOptions(
               CORES.verde,
@@ -264,10 +206,6 @@ function AppNavigator() {
             );
           }}
         />
-
-        {/* =====================================================
-            GERADOR DE SOAP
-            ===================================================== */}
 
         <Stack.Screen
           name="GeradorSoap"
@@ -277,10 +215,6 @@ function AppNavigator() {
             'Gerador de SOAP'
           )}
         />
-
-        {/* =====================================================
-            DEMAIS ROTAS
-            ===================================================== */}
 
         {ROTAS.map((rota) => (
           <Stack.Screen
@@ -293,40 +227,26 @@ function AppNavigator() {
             )}
           />
         ))}
-
       </Stack.Navigator>
-
     </NavigationContainer>
   );
 }
 
-// ============================================================
-// APP
-// ============================================================
-
 export default function App() {
-
   if (Platform.OS !== 'web') {
     return <AppNavigator />;
   }
 
   return (
     <View style={styles.webOuter}>
-
       <View style={styles.webPhone}>
         <AppNavigator />
       </View>
-
     </View>
   );
 }
 
-// ============================================================
-// ESTILOS
-// ============================================================
-
 const styles = StyleSheet.create({
-
   webOuter: {
     flex: 1,
     height: '100vh',
@@ -343,17 +263,13 @@ const styles = StyleSheet.create({
     maxHeight: 900,
     backgroundColor: '#fff',
     overflow: 'hidden',
-
     shadowColor: '#000',
-
     shadowOffset: {
       width: 0,
       height: 0,
     },
-
     shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 10,
   },
-
 });
