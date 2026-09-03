@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
   SafeAreaView,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 
 const MENU_ITEMS = [
@@ -20,6 +22,7 @@ const MENU_ITEMS = [
     bg: '#ffebee',
     screen: 'Posologia',
   },
+
   {
     id: '2',
     label: 'Tratamento de Doenças',
@@ -29,6 +32,7 @@ const MENU_ITEMS = [
     bg: '#ffedd5',
     screen: 'TratamentoDoencas',
   },
+
   {
     id: '7',
     label: 'Prescrições Pediátricas',
@@ -38,7 +42,8 @@ const MENU_ITEMS = [
     bg: '#e2f5ec',
     screen: 'PrescricoesPediatricas',
   },
-   {
+
+  {
     id: '6',
     label: 'Modelo SOAP',
     subtitle: 'Formulário de avaliação clínica',
@@ -47,6 +52,7 @@ const MENU_ITEMS = [
     bg: '#f3e5f5',
     screen: 'ModelosSoap',
   },
+
   {
     id: '3',
     label: 'Calculadoras',
@@ -56,6 +62,17 @@ const MENU_ITEMS = [
     bg: '#efe4fb',
     screen: 'Calculadoras',
   },
+
+  {
+    id: '8',
+    label: 'Gerador de SOAP',
+    subtitle: 'Crie relatórios clínicos rapidamente',
+    icon: 'document-text-outline',
+    color: '#f9a825',
+    bg: '#fff8e1',
+    screen: 'GeradorSoap',
+  },
+
   {
     id: '4',
     label: 'Monitorização da Pressão Arterial',
@@ -65,6 +82,7 @@ const MENU_ITEMS = [
     bg: '#e3f2fd',
     screen: 'MrpaGlicemia',
   },
+
   {
     id: '5',
     label: 'Sobre',
@@ -74,22 +92,33 @@ const MENU_ITEMS = [
     bg: '#e2f5ec',
     screen: 'Sobre',
   },
- 
 ];
 
 export default function HomeScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#4b1585" />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#4b1585"
+      />
 
       {/* Cabeçalho de destaque */}
       <View style={styles.hero}>
         <View style={styles.heroIconWrap}>
-          <Ionicons name="medkit-outline" size={30} color="#fff" />
+          <Ionicons
+            name="medkit-outline"
+            size={30}
+            color="#fff"
+          />
         </View>
-        <Text style={styles.heroTitle}>ProConduta
+
+        <Text style={styles.heroTitle}>
+          ProConduta
         </Text>
-        <Text style={styles.heroSubtitle}>Calculadoras médicas na palma da mão</Text>
+
+        <Text style={styles.heroSubtitle}>
+          Calculadoras médicas na palma da mão
+        </Text>
       </View>
 
       <ScrollView
@@ -102,16 +131,38 @@ export default function HomeScreen({ navigation }) {
             key={item.id}
             style={styles.card}
             activeOpacity={0.75}
-            onPress={() => item.screen && navigation.navigate(item.screen)}
+            onPress={() =>
+              item.screen && navigation.navigate(item.screen)
+            }
           >
-            <View style={[styles.iconCircle, { backgroundColor: item.bg }]}>
-              <Ionicons name={item.icon} size={26} color={item.color} />
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: item.bg },
+              ]}
+            >
+              <Ionicons
+                name={item.icon}
+                size={26}
+                color={item.color}
+              />
             </View>
+
             <View style={styles.cardTextWrap}>
-              <Text style={styles.cardTitle}>{item.label}</Text>
-              <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+              <Text style={styles.cardTitle}>
+                {item.label}
+              </Text>
+
+              <Text style={styles.cardSubtitle}>
+                {item.subtitle}
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={22} color="#c4c4c4" />
+
+            <Ionicons
+              name="chevron-forward"
+              size={22}
+              color="#c4c4c4"
+            />
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -124,6 +175,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f4f2f7',
   },
+
   hero: {
     backgroundColor: '#4b1585',
     paddingTop: 28,
@@ -132,6 +184,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
+
   heroIconWrap: {
     width: 54,
     height: 54,
@@ -141,24 +194,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 14,
   },
+
   heroTitle: {
     color: '#fff',
     fontSize: 26,
     fontWeight: '800',
     letterSpacing: 1,
   },
+
   heroSubtitle: {
     color: 'rgba(255,255,255,0.75)',
     fontSize: 14,
     marginTop: 4,
   },
+
   list: {
     flex: 1,
   },
+
   listContent: {
     padding: 20,
     paddingTop: 24,
   },
+
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,11 +225,15 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 3,
   },
+
   iconCircle: {
     width: 52,
     height: 52,
@@ -180,19 +242,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
+
   cardTextWrap: {
     flex: 1,
   },
+
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#1f1f1f',
   },
+
   cardSubtitle: {
     fontSize: 12.5,
     color: '#8a8a8a',
     marginTop: 2,
   },
+
   footerButton: {
     flexDirection: 'row',
     backgroundColor: '#6a1fb0',
@@ -202,6 +268,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
+
   footerButtonText: {
     color: '#fff',
     fontSize: 15,

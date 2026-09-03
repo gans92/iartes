@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  Platform,
 } from "react-native";
 
 import { medicamentos } from "./MedicamentosData";
@@ -18,13 +19,10 @@ import {
   calcularPorIdade,
 } from "./calculoDose";
 
-
 export default function CalculadoraDoseScreen({ route }) {
-
   const { medicamentoId } = route.params;
 
   const medicamento = medicamentos[medicamentoId];
-
 
   // =====================================================
   // ESTADOS
@@ -36,305 +34,307 @@ export default function CalculadoraDoseScreen({ route }) {
 
   const [ageUnit, setAgeUnit] = useState("meses");
 
+  const handleAgeChange = (text) => {
+    if (text === "") {
+      setAgeInput("");
+      return;
+    }
+
+    const normalized = text.replace(",", ".");
+
+    if (!/^\d*\.?\d*$/.test(normalized)) {
+      return;
+    }
+
+    const value = parseFloat(normalized);
+
+    if (isNaN(value)) {
+      setAgeInput(text);
+      return;
+    }
+
+    const limite = ageUnit === "anos" ? 18 : 216;
+
+    if (value > limite) {
+      const mensagem =
+        ageUnit === "anos"
+          ? "Esta calculadora é destinada a pacientes pediátricos e aceita idade de até 18 anos."
+          : "Esta calculadora é destinada a pacientes pediátricos e aceita idade de até 216 meses (18 anos).";
+
+      if (Platform.OS === "web") {
+        window.alert(`Idade inválida\n\n${mensagem}`);
+        setAgeInput(String(limite));
+      } else {
+        Alert.alert("Idade inválida", mensagem, [
+          {
+            text: "OK",
+            onPress: () => {
+              setAgeInput(String(limite));
+            },
+          },
+        ]);
+      }
+
+      return;
+    }
+
+    setAgeInput(text);
+  };
+
+  const handleAgeBlur = () => {
+    if (ageInput.trim() === "") {
+      return;
+    }
+
+    const value = parseFloat(ageInput.replace(",", "."));
+
+    if (isNaN(value)) {
+      return;
+    }
+
+    const limite = ageUnit === "anos" ? 18 : 216;
+
+    if (value > limite) {
+      const mensagem =
+        ageUnit === "anos"
+          ? "Esta calculadora é destinada a pacientes pediátricos e aceita idade de até 18 anos."
+          : "Esta calculadora é destinada a pacientes pediátricos e aceita idade de até 216 meses (18 anos).";
+
+      if (Platform.OS === "web") {
+        window.alert(`Idade inválida\n\n${mensagem}`);
+        setAgeInput(String(limite));
+      } else {
+        Alert.alert("Idade inválida", mensagem, [
+          {
+            text: "OK",
+            onPress: () => {
+              setAgeInput(String(limite));
+            },
+          },
+        ]);
+      }
+    }
+  };
+
+  const handleWeightChange = (text) => {
+  if (text === "") {
+    setWeightInput("");
+    return;
+  }
+
+  const normalized = text.replace(",", ".");
+
+  if (!/^\d*\.?\d*$/.test(normalized)) {
+    return;
+  }
+
+  const value = parseFloat(normalized);
+
+  if (isNaN(value)) {
+    setWeightInput(text);
+    return;
+  }
+
+  const limite = 150;
+
+  if (value > limite) {
+    const mensagem =
+      "Esta calculadora é destinada a pacientes pediátricos e aceita peso de até 150 kg.";
+
+    if (Platform.OS === "web") {
+      window.alert(`Peso inválido\n\n${mensagem}`);
+      setWeightInput("150");
+    } else {
+      Alert.alert("Peso inválido", mensagem, [
+        {
+          text: "OK",
+          onPress: () => {
+            setWeightInput("150");
+          },
+        },
+      ]);
+    }
+
+    return;
+  }
+
+  setWeightInput(text);
+};
 
   // =====================================================
   // MEDICAMENTO NÃO ENCONTRADO
   // =====================================================
 
   if (!medicamento) {
-
     return (
       <SafeAreaView style={styles.safeArea}>
-
-        <Text style={styles.notFound}>
-          Medicamento não encontrado.
-        </Text>
-
+        <Text style={styles.notFound}>Medicamento não encontrado.</Text>
       </SafeAreaView>
     );
-
   }
-
 
   // =====================================================
   // PESO
   // =====================================================
 
-  const weight = weightInput.trim() === ""
-    ? 0
-    : parseFloat(weightInput.replace(",", "."));
+  const weight =
+    weightInput.trim() === "" ? 0 : parseFloat(weightInput.replace(",", "."));
 
-  const isValidWeight =
-    !isNaN(weight) && weight >= 0;
-
+  const isValidWeight = !isNaN(weight) && weight >= 0;
 
   // =====================================================
   // IDADE
   // =====================================================
 
-  const ageValue = parseFloat(
-    ageInput.replace(",", ".")
-  );
+  const ageValue =
+    ageInput.trim() === "" ? 0 : parseFloat(ageInput.replace(",", "."));
 
-  const isValidAge =
-    !isNaN(ageValue) && ageValue >= 0;
+  const isValidAge = !isNaN(ageValue) && ageValue >= 0;
 
+  const ageInMonths = isValidAge
+    ? ageUnit === "anos"
+      ? ageValue * 12
+      : ageValue
+    : null;
 
-  const ageInMonths =
-    isValidAge
-      ? ageUnit === "anos"
-        ? ageValue * 12
-        : ageValue
-      : null;
-
+  const idadeAcimaDoLimite =
+    isValidAge &&
+    ((ageUnit === "anos" && ageValue > 18) ||
+      (ageUnit === "meses" && ageValue > 216));
 
   // =====================================================
   // CÁLCULO POR PESO
   // =====================================================
 
   const apresentacoes = useMemo(() => {
-
-    if (
-      medicamento.baseCalculo !== "peso" ||
-      !isValidWeight
-    ) {
+    if (medicamento.baseCalculo !== "peso") {
       return null;
     }
 
-    return calcularApresentacoesPeso(
-      medicamento,
-      weight
-    );
+    if (isNaN(weight)) {
+      return null;
+    }
 
-  }, [
-    medicamento,
-    weight,
-    isValidWeight,
-  ]);
-
+    return calcularApresentacoesPeso(medicamento, weight);
+  }, [medicamento, weight]);
 
   // =====================================================
   // MG/KG EFETIVO
   // =====================================================
 
   const mgPorKgEfetivo = useMemo(() => {
-
-    if (
-      medicamento.baseCalculo !== "peso" ||
-      !isValidWeight
-    ) {
+    if (medicamento.baseCalculo !== "peso") {
       return null;
     }
 
-    return calcularMgPorKgEfetivo(
-      medicamento,
-      weight
-    );
+    if (isNaN(weight)) {
+      return null;
+    }
 
-  }, [
-    medicamento,
-    weight,
-    isValidWeight,
-  ]);
-
+    return calcularMgPorKgEfetivo(medicamento, weight);
+  }, [medicamento, weight]);
 
   // =====================================================
   // CÁLCULO POR IDADE
   // =====================================================
 
   const resultadoIdade = useMemo(() => {
-
-    if (
-      medicamento.baseCalculo !== "idade" ||
-      !isValidAge
-    ) {
+    if (medicamento.baseCalculo !== "idade" || !isValidAge) {
       return null;
     }
 
-    return calcularPorIdade(
-      medicamento,
-      ageInMonths
-    );
-
-  }, [
-    medicamento,
-    ageInMonths,
-    isValidAge,
-  ]);
-
+    return calcularPorIdade(medicamento, ageInMonths);
+  }, [medicamento, ageInMonths, isValidAge]);
 
   // =====================================================
   // INTERFACE
   // =====================================================
 
   return (
-
     <SafeAreaView style={styles.safeArea}>
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-      >
-
-
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* =====================================================
-            CABEÇALHO + INPUT
-            ===================================================== */}
-
-        <View style={styles.grayBlock}>
-
-
-          {/* BOTÕES */}
-
-          <View style={styles.actionsRow}>
-
-            <TouchableOpacity
-              style={styles.bulaButton}
-            >
-
-              <Text style={styles.bulaButtonText}>
-                Ver bula
-              </Text>
-
-            </TouchableOpacity>
-
-
-            <View style={styles.actionsRight}>
-
-              <TouchableOpacity
-                style={styles.iconButton}
-              >
-
-                <Text style={styles.editIcon}>
-                  ✎
-                </Text>
-
-              </TouchableOpacity>
-
-
-              <TouchableOpacity
-                style={styles.iconButton}
-              >
-
-                <Text style={styles.starIcon}>
-                  ☆
-                </Text>
-
-              </TouchableOpacity>
-
-            </View>
-
-          </View>
-
-
-          {/* =====================================================
               INPUT DE PESO
               ===================================================== */}
 
-          {medicamento.baseCalculo === "peso" && (
+        {medicamento.baseCalculo === "peso" && (
+          <InputRow
+            label="Peso"
+            unit="kg"
+            value={weightInput}
+            onChangeText={handleWeightChange}
+          />
+        )}
 
-            <InputRow
-              label="Peso"
-              unit="kg"
-              value={weightInput}
-              onChangeText={setWeightInput}
-            />
-
-          )}
-
-
-          {/* =====================================================
+        {/* =====================================================
               INPUT DE IDADE
               ===================================================== */}
 
-          {medicamento.baseCalculo === "idade" && (
-
+        {medicamento.baseCalculo === "idade" && (
+          <>
             <View style={styles.ageRow}>
-
-
-              <Text style={styles.ageLabel}>
-                Idade
-              </Text>
-
+              <Text style={styles.ageLabel}>Idade</Text>
 
               <View style={styles.ageInputBox}>
-
                 <TextInput
                   style={styles.ageInput}
                   keyboardType="decimal-pad"
                   value={ageInput}
-                  onChangeText={setAgeInput}
+                  onChangeText={handleAgeChange}
                   textAlign="center"
                 />
-
               </View>
 
-
-              {/* TOGGLE */}
-
               <View style={styles.ageToggle}>
-
-
                 <TouchableOpacity
                   style={[
                     styles.ageOption,
-
-                    ageUnit === "meses" &&
-                    styles.ageOptionActive,
+                    ageUnit === "meses" && styles.ageOptionActive,
                   ]}
-
-                  onPress={() =>
-                    setAgeUnit("meses")
-                  }
+                  onPress={() => {
+                    setAgeUnit("meses");
+                  }}
                 >
-
                   <Text
                     style={[
                       styles.ageOptionText,
-
-                      ageUnit === "meses" &&
-                      styles.ageOptionTextActive,
+                      ageUnit === "meses" && styles.ageOptionTextActive,
                     ]}
                   >
                     meses
                   </Text>
-
                 </TouchableOpacity>
-
 
                 <TouchableOpacity
                   style={[
                     styles.ageOption,
-
-                    ageUnit === "anos" &&
-                    styles.ageOptionActive,
+                    ageUnit === "anos" && styles.ageOptionActive,
                   ]}
-
-                  onPress={() =>
-                    setAgeUnit("anos")
-                  }
+                  onPress={() => {
+                    setAgeUnit("anos");
+                  }}
                 >
-
                   <Text
                     style={[
                       styles.ageOptionText,
-
-                      ageUnit === "anos" &&
-                      styles.ageOptionTextActive,
+                      ageUnit === "anos" && styles.ageOptionTextActive,
                     ]}
                   >
                     anos
                   </Text>
-
                 </TouchableOpacity>
-
-
               </View>
-
             </View>
 
-          )}
-
-        </View>
+            {idadeAcimaDoLimite && (
+              <View style={styles.ageErrorBox}>
+                <Text style={styles.ageErrorText}>
+                  ⚠️ Informe uma idade de até 18 anos.
+                </Text>
+              </View>
+            )}
+          </>
+        )}
 
         {/* =====================================================
     RESULTADOS POR PESO
@@ -342,332 +342,149 @@ export default function CalculadoraDoseScreen({ route }) {
 
         {medicamento.baseCalculo === "peso" && (
           <View style={styles.formulationsBlock}>
-
             {medicamento.apresentacoes?.map((ap) => {
-
               // Procura o resultado calculado correspondente
               const resultado = apresentacoes?.find(
-                (r) => r.heading === ap.heading
+                (r) => r.heading === ap.heading,
               );
 
               return (
-                <View
-                  key={ap.heading}
-                  style={styles.formulationSection}
-                >
-
+                <View key={ap.heading} style={styles.formulationSection}>
                   {/* TÍTULO DA APRESENTAÇÃO */}
-                  <Text style={styles.formulationHeading}>
-                    {ap.heading}
-                  </Text>
+                  <Text style={styles.formulationHeading}>{ap.heading}</Text>
 
-                  {/* =================================================
-              DOSE CALCULADA
-              Só aparece quando o peso foi informado
-              ================================================= */}
-
+                  {/* DOSE CALCULADA */}
                   {resultado && (
                     <View style={styles.bulletRow}>
-
-                      <Text style={styles.bulletDot}>
-                        •
-                      </Text>
+                      <Text style={styles.bulletDot}>•</Text>
 
                       <Text style={styles.bulletText}>
-
                         <Text style={styles.highlight}>
                           {resultado.doseExibida} {resultado.unidade}
-                        </Text>
-
-                        {" "}
-
+                        </Text>{" "}
                         {resultado.instrucao}
-
                       </Text>
-
                     </View>
                   )}
 
-                  {/* =================================================
-              DOSE MÁXIMA
-              Sempre aparece
-              ================================================= */}
-
+                  {/* DOSE MÁXIMA */}
                   {ap.doseMaximaPorDose && (
                     <View style={styles.subBulletRow}>
-
-                      <Text style={styles.subBulletDot}>
-                        •
-                      </Text>
+                      <Text style={styles.subBulletDot}>•</Text>
 
                       <Text style={styles.subBulletText}>
-                        dose máxima de {ap.doseMaximaPorDose} {ap.unidade} por dose
+                        dose máxima de {ap.doseMaximaPorDose} {ap.unidade} por
+                        dose
                       </Text>
-
                     </View>
                   )}
 
-                  {/* =================================================
-              OBSERVAÇÕES EXTRAS
-              Sempre aparecem
-              ================================================= */}
-
+                  {/* OBSERVAÇÕES DA APRESENTAÇÃO */}
                   {Array.isArray(ap.obsExtra)
                     ? ap.obsExtra.map((obs, index) => (
-                      <View
-                        key={`${ap.heading}-obs-${index}`}
-                        style={styles.subBulletRow}
-                      >
+                        <View
+                          key={`${ap.heading}-obs-${index}`}
+                          style={styles.subBulletRow}
+                        >
+                          <Text style={styles.subBulletDot}>•</Text>
 
-                        <Text style={styles.subBulletDot}>
-                          •
-                        </Text>
-
-                        <Text style={styles.subBulletText}>
-                          {obs}
-                        </Text>
-
-                      </View>
-                    ))
+                          <Text style={styles.subBulletText}>{obs}</Text>
+                        </View>
+                      ))
                     : ap.obsExtra && (
-                      <View style={styles.subBulletRow}>
+                        <View style={styles.subBulletRow}>
+                          <Text style={styles.subBulletDot}>•</Text>
 
-                        <Text style={styles.subBulletDot}>
-                          •
-                        </Text>
-
-                        <Text style={styles.subBulletText}>
-                          {ap.obsExtra}
-                        </Text>
-
-                      </View>
-                    )}
-
+                          <Text style={styles.subBulletText}>
+                            {ap.obsExtra}
+                          </Text>
+                        </View>
+                      )}
                 </View>
               );
             })}
-
           </View>
         )}
 
-
         {/* =====================================================
-            RESULTADO POR IDADE
-            ===================================================== */}
+              RESULTADOS POR IDADE
+              ===================================================== */}
 
-        {medicamento.baseCalculo === "idade" && (
+        {medicamento.baseCalculo === "idade" &&
+          !idadeAcimaDoLimite &&
+          resultadoIdade && (
+            <View style={styles.formulationsBlock}>
+              {medicamento.apresentacoes?.map((ap) => (
+                <View key={ap.heading} style={styles.formulationSection}>
+                  <Text style={styles.formulationHeading}>{ap.heading}</Text>
 
-          <View style={styles.formulationsBlock}>
+                  <View style={styles.bulletRow}>
+                    <Text style={styles.bulletDot}>•</Text>
 
-
-            {!isValidAge && (
-
-              <Text style={styles.instructionPlaceholder}>
-                Informe a idade para calcular a dose.
-              </Text>
-
-            )}
-
-
-            {resultadoIdade?.contraindicado && (
-
-              <View style={styles.contraindicadoBox}>
-
-                <Text style={styles.contraindicadoText}>
-
-                  🚫 Contraindicado:{" "}
-
-                  {resultadoIdade.motivo}
-
-                </Text>
-
-              </View>
-
-            )}
-
-
-            {resultadoIdade &&
-              !resultadoIdade.contraindicado && (
-
-                <>
-
-                  {resultadoIdade.semDoseConfigurada ? (
-
-                    <Text
-                      style={styles.instructionPlaceholder}
-                    >
-                      Dose por idade ainda não configurada.
+                    <Text style={styles.bulletText}>
+                      <Text style={styles.highlight}>
+                        {ageInput.trim() === ""
+                          ? `0 ${ap.unidade}`
+                          : (resultadoIdade.doseExibida ?? `0 ${ap.unidade}`)}
+                      </Text>{" "}
+                      {ap.instrucao || "via oral uma vez ao dia"}
                     </Text>
+                  </View>
 
-                  ) : (
+                  {ap.doseMaximaPorDose !== undefined && (
+                    <View style={styles.subBulletRow}>
+                      <Text style={styles.subBulletDot}>•</Text>
 
-                    <FormulationSection
-
-                      heading={
-                        resultadoIdade.heading ||
-                        `Dose por idade (${medicamento.nome}):`
-                      }
-
-                      highlighted={
-
-                        resultadoIdade.doseExibida ??
-                        `${Math.round(
-                          resultadoIdade.doseMg
-                        )} ${resultadoIdade.unidade}`
-
-                      }
-
-                      instruction={
-                        resultadoIdade.instrucao ||
-                        `a cada ${resultadoIdade.intervaloHoras} horas`
-                      }
-
-                      subItems={[
-                        r.doseMaximaPorDose
-                          ? `dose máxima de ${r.doseMaximaPorDose} ${r.unidade} por dose`
-                          : null,
-                        r.obsExtra,
-                      ].filter(Boolean)}
-
-                    />
-
+                      <Text style={styles.subBulletText}>
+                        dose máxima de {ap.doseMaximaPorDose} {ap.unidade} por
+                        dose
+                      </Text>
+                    </View>
                   )}
 
-                </>
-
-              )}
-
-          </View>
-
-        )}
-
-
-        {/* =====================================================
-            OBSERVAÇÕES
-            ===================================================== */}
-
-        {(
-          medicamento.observacoesFixas?.length > 0 ||
-          medicamento.baseCalculo === "peso"
-        ) && (
-
-            <View style={styles.observationsBlock}>
-
-
-              <Text style={styles.observationsTitle}>
-                Observações
-              </Text>
-
-
-              {/* INFORMAÇÃO DA DOSE POR PESO */}
-
-              {medicamento.baseCalculo === "peso" && (
-
-                <ObservationItem>
-
-                  {isValidWeight &&
-                    mgPorKgEfetivo !== null ? (
-
-                    <>
-
-                      Dose calculada equivalente a{" "}
-
-                      {mgPorKgEfetivo} mg/kg/dose{" "}
-
-                      {medicamento.faixaRecomendada && (
-
-                        <>
-                          (recomendado entre{" "}
-                          {medicamento.faixaRecomendada.min}
-                          -
-                          {medicamento.faixaRecomendada.max}
-                          {" "}mg/kg/dose)
-                        </>
-
+                  {Array.isArray(ap.obsExtra)
+                    ? ap.obsExtra.map((obs, index) => (
+                        <View
+                          key={`${ap.heading}-obs-${index}`}
+                          style={styles.subBulletRow}
+                        >
+                          <Text style={styles.subBulletDot}>•</Text>
+                          <Text style={styles.subBulletText}>{obs}</Text>
+                        </View>
+                      ))
+                    : ap.obsExtra && (
+                        <View style={styles.subBulletRow}>
+                          <Text style={styles.subBulletDot}>•</Text>
+                          <Text style={styles.subBulletText}>
+                            {ap.obsExtra}
+                          </Text>
+                        </View>
                       )}
-
-                    </>
-
-                  ) : (
-
-                    <>
-
-                      Informe o peso para calcular a dose
-
-                      {medicamento.faixaRecomendada && (
-
-                        <>
-                          {" "}
-                          (recomendado entre{" "}
-                          {medicamento.faixaRecomendada.min}
-                          -
-                          {medicamento.faixaRecomendada.max}
-                          {" "}mg/kg/dose)
-                        </>
-
-                      )}
-
-                    </>
-
-                  )}
-
-                </ObservationItem>
-
-              )}
-
-
-              {/* OBSERVAÇÕES FIXAS */}
-
-              {medicamento.observacoesFixas?.map(
-                (obs, index) => (
-
-                  <ObservationItem
-                    key={index}
-                  >
-                    {obs}
-                  </ObservationItem>
-
-                )
-              )}
-
-
+                </View>
+              ))}
             </View>
-
           )}
 
+        {medicamento.observacoesFixas?.length > 0 && (
+          <View style={styles.observationsBlock}>
+            <Text style={styles.observationsTitle}>Observações</Text>
 
+            {medicamento.observacoesFixas.map((obs, index) => (
+              <ObservationItem key={index}>{obs}</ObservationItem>
+            ))}
+          </View>
+        )}
       </ScrollView>
-
     </SafeAreaView>
-
   );
-
 }
 
-
-// =============================================================
-// INPUT GENÉRICO
-// =============================================================
-
-function InputRow({
-  label,
-  unit,
-  value,
-  onChangeText,
-}) {
-
+function InputRow({ label, unit, value, onChangeText }) {
   return (
-
     <View style={styles.weightRow}>
-
-
-      <Text style={styles.weightLabel}>
-        {label}
-      </Text>
-
+      <Text style={styles.weightLabel}>{label}</Text>
 
       <View style={styles.weightInputBox}>
-
         <TextInput
           style={styles.weightInput}
           keyboardType="decimal-pad"
@@ -675,21 +492,12 @@ function InputRow({
           onChangeText={onChangeText}
           textAlign="center"
         />
-
       </View>
 
-
-      <Text style={styles.weightUnit}>
-        {unit}
-      </Text>
-
-
+      <Text style={styles.weightUnit}>{unit}</Text>
     </View>
-
   );
-
 }
-
 
 // =============================================================
 // SEÇÃO DE APRESENTAÇÃO
@@ -701,124 +509,64 @@ function FormulationSection({
   instruction,
   subItems = [],
 }) {
-
   return (
-
     <View style={styles.formulationSection}>
-
-
-      <Text style={styles.formulationHeading}>
-        {heading}
-      </Text>
-
+      <Text style={styles.formulationHeading}>{heading}</Text>
 
       <View style={styles.bulletRow}>
-
-        <Text style={styles.bulletDot}>
-          •
-        </Text>
-
+        <Text style={styles.bulletDot}>•</Text>
 
         <Text style={styles.bulletText}>
-
-          <Text style={styles.highlight}>
-            {highlighted}
-          </Text>
-
-          {" "}
-
-          {instruction}
-
+          <Text style={styles.highlight}>{highlighted}</Text> {instruction}
         </Text>
-
       </View>
 
+      {subItems.map((text, index) => (
+        <View key={`${text}-${index}`} style={styles.subBulletRow}>
+          <Text style={styles.subBulletDot}>•</Text>
 
-      {subItems.map(
-        (text, index) => (
-
-          <View
-            key={`${text}-${index}`}
-            style={styles.subBulletRow}
-          >
-
-            <Text style={styles.subBulletDot}>
-              •
-            </Text>
-
-
-            <Text style={styles.subBulletText}>
-              {text}
-            </Text>
-
-          </View>
-
-        )
-      )}
-
-
+          <Text style={styles.subBulletText}>{text}</Text>
+        </View>
+      ))}
     </View>
-
   );
-
 }
-
 
 // =============================================================
 // OBSERVAÇÃO
 // =============================================================
 
 function ObservationItem({ children }) {
-
   return (
-
     <View style={styles.observationRow}>
-
-
       <View style={styles.warningIcon}>
-
-        <Text style={styles.warningIconText}>
-          !
-        </Text>
-
+        <Text style={styles.warningIconText}>!</Text>
       </View>
 
-
-      <Text style={styles.observationText}>
-        {children}
-      </Text>
-
-
+      <Text style={styles.observationText}>{children}</Text>
     </View>
-
   );
-
 }
-
 
 // =============================================================
 // ESTILOS
 // =============================================================
 
 const styles = StyleSheet.create({
-
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
 
-
   scrollContent: {
     flexGrow: 1,
   },
-
 
   notFound: {
     padding: 20,
     fontSize: 16,
     color: "#37474F",
   },
-
 
   // =====================================================
   // PLACEHOLDER
@@ -831,7 +579,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
 
-
   // =====================================================
   // CABEÇALHO
   // =====================================================
@@ -843,7 +590,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
 
-
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -851,7 +597,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
-
 
   bulaButton: {
     borderWidth: 1.5,
@@ -861,19 +606,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
 
-
   bulaButtonText: {
     color: "#F0932B",
     fontWeight: "700",
     fontSize: 15,
   },
 
-
   actionsRight: {
     flexDirection: "row",
     gap: 8,
   },
-
 
   iconButton: {
     width: 36,
@@ -882,18 +624,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-
   editIcon: {
     fontSize: 20,
     color: "#37474F",
   },
 
-
   starIcon: {
     fontSize: 24,
     color: "#37474F",
   },
-
 
   // =====================================================
   // PESO
@@ -907,7 +646,6 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-
   weightLabel: {
     fontSize: 20,
     fontWeight: "700",
@@ -916,7 +654,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginRight: 12,
   },
-
 
   weightInputBox: {
     backgroundColor: "#FFFFFF",
@@ -937,7 +674,6 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
 
-
   weightInput: {
     fontSize: 24,
     color: "#5F6368",
@@ -949,7 +685,6 @@ const styles = StyleSheet.create({
     outlineStyle: "none",
   },
 
-
   weightUnit: {
     fontSize: 20,
     fontWeight: "700",
@@ -957,7 +692,6 @@ const styles = StyleSheet.create({
     width: 45,
     marginLeft: 12,
   },
-
 
   // =====================================================
   // IDADE
@@ -971,14 +705,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-
   ageLabel: {
     fontSize: 20,
     fontWeight: "700",
     color: "#1A1D29",
     marginRight: 18,
   },
-
 
   ageInputBox: {
     width: 90,
@@ -991,7 +723,6 @@ const styles = StyleSheet.create({
     marginRight: 22,
   },
 
-
   ageInput: {
     width: "100%",
     height: "100%",
@@ -1001,7 +732,6 @@ const styles = StyleSheet.create({
     outlineStyle: "none",
   },
 
-
   ageToggle: {
     flexDirection: "row",
     backgroundColor: "#ECEEEF",
@@ -1010,7 +740,6 @@ const styles = StyleSheet.create({
     height: 56,
   },
 
-
   ageOption: {
     minWidth: 92,
     paddingHorizontal: 20,
@@ -1018,24 +747,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-
   ageOptionActive: {
     backgroundColor: "#F18700",
     borderRadius: 32,
   },
-
 
   ageOptionText: {
     fontSize: 20,
     color: "#37474F",
   },
 
-
   ageOptionTextActive: {
     color: "#FFFFFF",
     fontWeight: "600",
   },
-
 
   // =====================================================
   // APRESENTAÇÕES
@@ -1046,11 +771,9 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
-
   formulationSection: {
     marginBottom: 24,
   },
-
 
   formulationHeading: {
     fontSize: 17,
@@ -1058,13 +781,11 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-
   bulletRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     marginBottom: 8,
   },
-
 
   bulletDot: {
     fontSize: 16,
@@ -1073,7 +794,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 
-
   bulletText: {
     flex: 1,
     fontSize: 17,
@@ -1081,13 +801,11 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 
-
   highlight: {
     backgroundColor: "#FFD966",
     fontWeight: "700",
     borderRadius: 4,
   },
-
 
   subBulletRow: {
     flexDirection: "row",
@@ -1096,7 +814,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-
   subBulletDot: {
     fontSize: 13,
     color: "#8FA0A6",
@@ -1104,33 +821,12 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
 
-
   subBulletText: {
     flex: 1,
     fontSize: 15,
     color: "#5F6368",
     lineHeight: 21,
   },
-
-
-  // =====================================================
-  // CONTRAINDICAÇÃO
-  // =====================================================
-
-  contraindicadoBox: {
-    backgroundColor: "#FDEAEA",
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 20,
-  },
-
-
-  contraindicadoText: {
-    color: "#E53935",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-
 
   // =====================================================
   // OBSERVAÇÕES
@@ -1142,7 +838,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-
   observationsTitle: {
     fontSize: 22,
     fontWeight: "700",
@@ -1150,13 +845,11 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
 
-
   observationRow: {
     flexDirection: "row",
     marginBottom: 22,
     alignItems: "flex-start",
   },
-
 
   warningIcon: {
     width: 22,
@@ -1170,13 +863,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-
   warningIconText: {
     color: "#E53935",
     fontWeight: "700",
     fontSize: 13,
   },
-
 
   observationText: {
     flex: 1,
@@ -1184,5 +875,4 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     color: "#37474F",
   },
-
 });
