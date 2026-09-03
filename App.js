@@ -20,12 +20,9 @@ import TratamentoDoencasScreen from './screens/TratamentoDoencasScreen';
 import PrescricoesPediatricasScreen from './screens/PrescricoesPediatricasScreen';
 import ModelosSoapScreen from './screens/ModelosSoapScreen';
 
-// Telas de dose pediátrica individuais, por medicamento
-import DipironaScreen from './screens/ped/DipironaScreen';
-import TramadolScreen from './screens/ped/TramadolScreen';
-import ParacetamolScreen from './screens/ped/ParacetamolScreen';
-import IbuprofenoScreen from './screens/ped/IbuprofenoScreen';
-import AcidoAcetilsalicilicoScreen from './screens/ped/AcidoAcetilsalicilicoScreen';
+// Tela única de dose pediátrica — recebe medicamentoId por parâmetro
+import CalculadoraDoseScreen from './screens/ped/CalculadoraDoseScreen';
+import { medicamentos } from './screens/ped/MedicamentosData';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +39,10 @@ const CORES = {
 // Adicionar uma tela nova = adicionar um objeto aqui.
 // Stack.Screen e o deep linking são gerados a partir disso,
 // então nunca ficam dessincronizados entre si.
+//
+// Exceção: rotas com título dinâmico (que depende de params, não é
+// fixo por tela) não entram aqui — vão declaradas à mão mais abaixo,
+// junto com Home/Calculadoras/Sobre.
 // ============================================================
 
 const ROTAS = [
@@ -122,47 +123,16 @@ const ROTAS = [
     cor: CORES.verde,
     path: 'prescricoes-pediatricas',
   },
-  {
-    name: 'Dipirona',
-    component: DipironaScreen,
-    titulo: 'Dipirona',
-    cor: CORES.verde,
-    path: 'prescricoes-pediatricas/dipirona',
-  },
-  {
-    name: 'Tramadol',
-    component: TramadolScreen,
-    titulo: 'Tramadol',
-    cor: CORES.verde,
-    path: 'prescricoes-pediatricas/tramadol',
-  },
-  {
-    name: 'Paracetamol',
-    component: ParacetamolScreen,
-    titulo: 'Paracetamol',
-    cor: CORES.verde,
-    path: 'prescricoes-pediatricas/paracetamol',
-  },
-  {
-    name: 'Ibuprofeno',
-    component: IbuprofenoScreen,
-    titulo: 'Ibuprofeno',
-    cor: CORES.verde,
-    path: 'prescricoes-pediatricas/ibuprofeno',
-  },
-  {
-    name: 'AcidoAcetilsalicilico',
-    component: AcidoAcetilsalicilicoScreen,
-    titulo: 'Ácido Acetilsalicílico',
-    cor: CORES.verde,
-    path: 'prescricoes-pediatricas/acido-acetilsalicilico',
-  },
-  // Próximas doses pediátricas entram aqui do mesmo jeito
+  // Telas individuais de dose pediátrica (Dipirona, Tramadol, Paracetamol,
+  // Ibuprofeno, AcidoAcetilsalicilico) foram substituídas pela rota única
+  // CalculadoraDose, declarada abaixo fora do array — ver comentário ali.
 ];
 
-// Telas que não seguem o padrão de header colorido (Home some o header,
-// Calculadoras e Sobre usam roxo fixo) ficam fora do array ROTAS
-// e são declaradas manualmente abaixo — são exceções, não a regra.
+// Telas que não seguem o padrão de header colorido/título fixo
+// (Home some o header, Calculadoras e Sobre usam roxo fixo,
+// CalculadoraDose tem título dinâmico por medicamento) ficam fora
+// do array ROTAS e são declaradas manualmente abaixo — são exceções,
+// não a regra.
 
 function headerOptions(cor, titulo) {
   return {
@@ -182,6 +152,10 @@ const linking = {
       Home: 'iartes',
       Calculadoras: 'calculadoras',
       Sobre: 'sobre',
+      // CalculadoraDose tem path com parâmetro — não pode ser gerado
+      // pelo Object.fromEntries genérico abaixo, por isso vem antes,
+      // manualmente.
+      CalculadoraDose: 'prescricoes-pediatricas/:medicamentoId',
       // Gerado a partir do array ROTAS — não precisa mais repetir na mão
       ...Object.fromEntries(ROTAS.map((r) => [r.name, r.path])),
     },
@@ -213,6 +187,22 @@ function AppNavigator() {
           name="Sobre"
           component={SobreScreen}
           options={headerOptions(CORES.roxo, 'Sobre ProConduta')}
+        />
+
+        {/* Título dinâmico: lê o medicamentoId do param e busca o nome
+            em MedicamentosData. Se o id não existir no dado (medicamento
+            ainda não cadastrado), cai num título genérico em vez de
+            quebrar o header. */}
+        <Stack.Screen
+          name="CalculadoraDose"
+          component={CalculadoraDoseScreen}
+          options={({ route }) => {
+            const medicamento = medicamentos[route.params?.medicamentoId];
+            return headerOptions(
+              CORES.verde,
+              medicamento?.nome ?? 'Doses Pediátricas'
+            );
+          }}
         />
 
         {/* Geradas a partir do array ROTAS — adicionar tela nova = adicionar item lá em cima */}

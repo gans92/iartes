@@ -7,13 +7,13 @@ import {
   SectionList,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
 } from 'react-native';
 
 /**
  * PrescricoesPediatricasScreen
  * Índice das doses pediátricas, organizadas por categoria.
- * Cada item navega para a tela de cálculo do medicamento (ex: DipironaScreen).
+ * Cada item navega para a tela genérica CalculadoraDoseScreen,
+ * passando o id do medicamento como parâmetro (medicamentoId).
  *
  * Header (título + seta de voltar + cor) é o padrão do Stack.Navigator —
  * não é desenhado aqui, ver options em App.js.
@@ -48,17 +48,6 @@ const SECTIONS = [
   },
 ];
 
-// Rota registrada em App.js (dentro do array ROTAS) por medicamento.
-// Conforme for criando as próximas telas (Ibuprofeno, Paracetamol...),
-// adicione aqui E registre no array ROTAS em App.js.
-const ROUTES = {
-  dipirona: 'Dipirona',
-  tramadol: 'Tramadol',
-  paracetamol: 'Paracetamol',
-  ibuprofeno: 'Ibuprofeno',
-  aas: 'AcidoAcetilsalicilico',
-};
-
 export default function PrescricoesPediatricasScreen({ navigation }) {
   const [query, setQuery] = useState('');
 
@@ -72,12 +61,7 @@ export default function PrescricoesPediatricasScreen({ navigation }) {
   }, [query]);
 
   const handlePress = (item) => {
-    const route = ROUTES[item.id];
-    if (route) {
-      navigation.navigate(route);
-    } else {
-      Alert.alert(item.name, 'Essa dose ainda não foi cadastrada.');
-    }
+    navigation.navigate('CalculadoraDose', { medicamentoId: item.id });
   };
 
   return (
