@@ -19,7 +19,7 @@ const MODOS = [
 // CURB-65: 5 critérios (inclui ureia)
 const CRITERIOS_CURB = [
   { id: 'confusao', label: 'Confusão mental' },
-  { id: 'ureia', label: 'Ureia elevada (>7 nmol/L ou > 50 mg/dL)' },
+  { id: 'ureia', label: 'Ureia elevada (> 50 mg/dL ou > 7 nmol/L)' },
   { id: 'fr', label: 'Frequência respiratória ≥ 30' },
   { id: 'pa', label: 'Pressão arterial baixa (PAS < 90 OU PAD < 60)' },
   { id: 'idade', label: 'Idade ≥ 65 anos' },
@@ -29,17 +29,36 @@ const CRITERIOS_CURB = [
 const CRITERIOS_CRB = CRITERIOS_CURB.filter((c) => c.id !== 'ureia');
 
 // Cada faixa tem sua própria cor de gravidade (verde -> amarelo -> laranja -> vermelho)
+// "detalhe" fica curto (ação a tomar); a mortalidade vira um badge separado, não texto corrido.
 const CONDUTAS_CURB = [
-  { texto: '0 e 1 ponto', detalhe: 'Tratamento ambulatorial', index: 0, cor: '#2e7d32' },
-  { texto: '2 pontos', detalhe: 'Considerar tratamento hospitalar', index: 1, cor: '#c9971f' },
-  { texto: '3 pontos', detalhe: 'Tratar como PAC grave', index: 2, cor: '#e0652c' },
-  { texto: '4 ou 5 pontos', detalhe: 'Internação em UTI', index: 3, cor: '#c0483f' },
+  { texto: '0 e 1 ponto', detalhe: 'Tratamento ambulatorial', mortalidade: '2,7%', index: 0, cor: '#2e7d32' },
+  { texto: '2 pontos', detalhe: 'Considerar internação ou ambulatorial com supervisão', mortalidade: '6,8%', index: 1, cor: '#c9971f' },
+  { texto: '3 pontos', detalhe: 'Necessária hospitalização e considerar UTI', mortalidade: '14,0%', index: 2, cor: '#e0652c' },
+  { texto: '4 ou 5 pontos', detalhe: 'Necessária hospitalização e considerar UTI', mortalidade: '24,8%', index: 3, cor: '#c0483f' },
 ];
 
 const CONDUTAS_CRB = [
-  { texto: '0 pontos', detalhe: 'Tratamento ambulatorial', mortalidade: '1,2%', index: 0, cor: '#2e7d32' },
-  { texto: '1 e 2 pontos', detalhe: 'Considerar tratamento hospitalar deve ser considerado', mortalidade: '8,15%', index: 1, cor: '#c9971f' },
-  { texto: '3 e 4 pontos', detalhe: 'Tratamento hospitalar', mortalidade: '31%', index: 2, cor: '#c0483f' },
+  {
+    texto: '0 pontos',
+    risco: 'Risco baixo',
+    detalhe: 'Tratamento ambulatorial',
+    index: 0,
+    cor: '#2e7d32',
+  },
+  {
+    texto: '1 e 2 pontos',
+    risco: 'Risco intermediário',
+    detalhe: 'considerar internação',
+    index: 1,
+    cor: '#c9971f',
+  },
+  {
+    texto: '3 e 4 pontos',
+    risco: 'Risco alto',
+    detalhe: 'Internação hospitalar com avaliação para UTI',
+    index: 2,
+    cor: '#c0483f',
+  },
 ];
 
 function classificarCURB(pontos) {
@@ -88,7 +107,7 @@ export default function GravidadePneumoniaScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={[styles.heroIcon, { backgroundColor: COR }]}>
-            <Ionicons name="thermometer-outline" size={26} color="#fff" />
+            <Ionicons name="fitness-outline" size={26} color="#fff" />
           </View>
           <View>
             <Text style={styles.heroTitulo}>{isCurb ? 'CURB-65' : 'CRB-65'}</Text>
@@ -137,13 +156,20 @@ export default function GravidadePneumoniaScreen() {
 
         {resultado && (
           <View style={[styles.resultadoBox, { borderLeftColor: corAtual, backgroundColor: corAtual + '1a' }]}>
-            <Text style={[styles.resultadoLabel, { color: corAtual }]}>Pontuação: {resultado.pontos}</Text>
+            <View style={styles.resultadoTopo}>
+              <Text style={[styles.resultadoLabel, { color: corAtual }]}>Pontuação: {resultado.pontos}</Text>
+              {condutas[resultado.index].mortalidade && (
+                <View style={[styles.badge, { backgroundColor: corAtual }]}>
+                  <Text style={styles.badgeTexto}>{condutas[resultado.index].mortalidade} mortalidade</Text>
+                </View>
+              )}
+              {condutas[resultado.index].risco && (
+                <View style={[styles.badge, { backgroundColor: corAtual }]}>
+                  <Text style={styles.badgeTexto}>{condutas[resultado.index].risco}</Text>
+                </View>
+              )}
+            </View>
             <Text style={[styles.resultadoTexto, { color: corAtual }]}>{condutas[resultado.index].detalhe}</Text>
-            {condutas[resultado.index].mortalidade && (
-              <Text style={[styles.resultadoMortalidade, { color: corAtual }]}>
-                Mortalidade estimada: {condutas[resultado.index].mortalidade}
-              </Text>
-            )}
           </View>
         )}
 
@@ -165,7 +191,16 @@ export default function GravidadePneumoniaScreen() {
               >
                 <View style={styles.linhaTopo}>
                   <Text style={[styles.pontosTexto, { color: c.cor }]}>{c.texto}</Text>
-                  {c.mortalidade && <Text style={styles.mortalidadeTexto}>{c.mortalidade} mortalidade</Text>}
+                  {c.mortalidade && (
+                    <View style={[styles.badgePequeno, { backgroundColor: c.cor + '22' }]}>
+                      <Text style={[styles.badgePequenoTexto, { color: c.cor }]}>{c.mortalidade}</Text>
+                    </View>
+                  )}
+                  {c.risco && (
+                    <View style={[styles.badgePequeno, { backgroundColor: c.cor + '22' }]}>
+                      <Text style={[styles.badgePequenoTexto, { color: c.cor }]}>{c.risco}</Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={styles.detalheTexto}>{c.detalhe}</Text>
               </View>
@@ -221,26 +256,25 @@ const styles = StyleSheet.create({
   },
   checkLabel: { fontSize: 14.5, color: '#333', flex: 1 },
   resultadoBox: { marginTop: 18, padding: 16, borderRadius: 14, borderLeftWidth: 5 },
-  resultadoLabel: { fontSize: 12.5, fontWeight: '700', marginBottom: 4 },
-  resultadoTexto: { fontSize: 18, fontWeight: '800' },
-  resultadoMortalidade: { fontSize: 12.5, fontWeight: '600', marginTop: 6 },
+  resultadoTopo: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  resultadoLabel: { fontSize: 12.5, fontWeight: '700' },
+  resultadoTexto: { fontSize: 16, fontWeight: '700', lineHeight: 21 },
+  badge: { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 20 },
+  badgeTexto: { fontSize: 11, fontWeight: '700', color: '#fff' },
   tabelaTitulo: { fontSize: 14, fontWeight: '700', color: '#3a3a3a', marginTop: 26, marginBottom: 10 },
   tabela: {},
   linhaTabela: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 6,
   },
-  linhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  pontosTexto: { fontSize: 13, fontWeight: '700', marginBottom: 2 },
-  mortalidadeTexto: { fontSize: 11.5, color: '#8a8a8a', fontWeight: '600' },
-  detalheTexto: { fontSize: 14, color: '#1f1f1f', fontWeight: '600' },
+  linhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 },
+  pontosTexto: { fontSize: 12.5, fontWeight: '700' },
+  badgePequeno: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 20 },
+  badgePequenoTexto: { fontSize: 10.5, fontWeight: '700' },
+  detalheTexto: { fontSize: 13.5, color: '#4a4a4a', fontWeight: '500', lineHeight: 18 },
   footer: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 16, paddingHorizontal: 20,

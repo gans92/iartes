@@ -55,7 +55,7 @@ const MENU_ITEMS = [
 
   {
     id: '3',
-    label: 'Calculadoras',
+    label: 'Calculadoras / Scores',
     subtitle: 'Ferramentas clínicas rápidas',
     icon: 'calculator-outline',
     color: '#6a1fb0',
@@ -113,11 +113,11 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <Text style={styles.heroTitle}>
-          ProConduta
+          ProConsulta
         </Text>
 
         <Text style={styles.heroSubtitle}>
-          Calculadoras médicas na palma da mão
+          Seu guia completo para práticas clínicas
         </Text>
       </View>
 

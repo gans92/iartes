@@ -32,7 +32,7 @@ const CALCULADORAS = [
     id: '2',
     label: 'Gravidade Pneumonia',
     subtitle: 'Escore CURB-65',
-    icon: 'thermometer-outline',
+    icon: 'fitness-outline',
     color: '#c0483f',
     bg: '#fbe6e3',
     screen: 'GravidadePneumonia',

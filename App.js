@@ -189,7 +189,7 @@ function AppNavigator() {
           component={SobreScreen}
           options={headerOptions(
             CORES.roxo,
-            'Sobre ProConduta'
+            'Sobre ProConsulta'
           )}
         />
 

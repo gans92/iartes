@@ -22,7 +22,7 @@ export default function SobreScreen() {
           <View style={styles.logoCircle}>
             <Ionicons name="medkit" size={36} color="#fff" />
           </View>
-          <Text style={styles.appName}>ProConduta</Text>
+          <Text style={styles.appName}>ProConsulta</Text>
           <Text style={styles.appSlogan}>Suporte à decisão clínica e prescrição</Text>
           <Text style={styles.appVersao}>Versão 2.0.0</Text>
         </View>
