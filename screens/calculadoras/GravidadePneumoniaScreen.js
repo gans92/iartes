@@ -100,7 +100,8 @@ export default function GravidadePneumoniaScreen() {
     setResultado({ pontos, index: classificar(pontos) });
   }, [marcados, modo]);
 
-  const corAtual = resultado ? condutas[resultado.index].cor : COR;
+  const condutaAtual = resultado ? condutas[resultado.index] : null;
+  const corAtual = condutaAtual ? condutaAtual.cor : COR;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -125,7 +126,10 @@ export default function GravidadePneumoniaScreen() {
                 key={m.id}
                 style={[styles.seletorBotao, ativo && { backgroundColor: COR }]}
                 activeOpacity={0.8}
-                onPress={() => setModo(m.id)}
+                onPress={() => {
+                  setModo(m.id);
+                  setResultado(null);
+                }}
               >
                 <Text style={[styles.seletorTexto, ativo && styles.seletorTextoAtivo]}>{m.label}</Text>
               </TouchableOpacity>
@@ -154,22 +158,22 @@ export default function GravidadePneumoniaScreen() {
           ))}
         </View>
 
-        {resultado && (
+        {resultado && condutaAtual && (
           <View style={[styles.resultadoBox, { borderLeftColor: corAtual, backgroundColor: corAtual + '1a' }]}>
             <View style={styles.resultadoTopo}>
               <Text style={[styles.resultadoLabel, { color: corAtual }]}>Pontuação: {resultado.pontos}</Text>
-              {condutas[resultado.index].mortalidade && (
+              {condutaAtual.mortalidade && (
                 <View style={[styles.badge, { backgroundColor: corAtual }]}>
-                  <Text style={styles.badgeTexto}>{condutas[resultado.index].mortalidade} mortalidade</Text>
+                  <Text style={styles.badgeTexto}>{condutaAtual.mortalidade} mortalidade</Text>
                 </View>
               )}
-              {condutas[resultado.index].risco && (
+              {condutaAtual.risco && (
                 <View style={[styles.badge, { backgroundColor: corAtual }]}>
-                  <Text style={styles.badgeTexto}>{condutas[resultado.index].risco}</Text>
+                  <Text style={styles.badgeTexto}>{condutaAtual.risco}</Text>
                 </View>
               )}
             </View>
-            <Text style={[styles.resultadoTexto, { color: corAtual }]}>{condutas[resultado.index].detalhe}</Text>
+            <Text style={[styles.resultadoTexto, { color: corAtual }]}>{condutaAtual.detalhe}</Text>
           </View>
         )}
 
