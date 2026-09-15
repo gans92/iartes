@@ -21,7 +21,7 @@ const CRITERIOS_CURB = [
   { id: 'confusao', label: 'Confusão mental' },
   { id: 'ureia', label: 'Ureia elevada (> 50 mg/dL ou > 7 nmol/L)' },
   { id: 'fr', label: 'Frequência respiratória ≥ 30' },
-  { id: 'pa', label: 'Pressão arterial baixa (PAS < 90 OU PAD < 60)' },
+  { id: 'pa', label: 'Pressão arterial baixa (PAS < 90 OU PAD ≤ 60)' },
   { id: 'idade', label: 'Idade ≥ 65 anos' },
 ];
 
@@ -86,10 +86,6 @@ export default function GravidadePneumoniaScreen() {
 
   const alternar = (id) => setMarcados((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  // Recalcula automaticamente sempre que algum critério (ou o modo CURB/CRB) muda.
-  // A soma considera só os critérios do modo atual, então marcações feitas em um
-  // modo (ex.: confusão mental) continuam valendo se o usuário trocar de modo —
-  // só a ureia (exclusiva do CURB-65) é ignorada no cálculo do CRB-65.
   useEffect(() => {
     const algumMarcado = criterios.some((c) => marcados[c.id]);
     if (!algumMarcado) {
