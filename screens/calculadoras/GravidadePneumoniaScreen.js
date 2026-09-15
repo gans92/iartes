@@ -48,7 +48,7 @@ const CONDUTAS_CRB = [
   {
     texto: '1 e 2 pontos',
     risco: 'Risco intermediário',
-    detalhe: 'considerar internação',
+    detalhe: 'Considerar internação',
     index: 1,
     cor: '#c9971f',
   },
