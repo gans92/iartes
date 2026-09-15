@@ -21,7 +21,7 @@ const CRITERIOS_CURB = [
   { id: 'confusao', label: 'Confusão mental' },
   { id: 'ureia', label: 'Ureia elevada (> 50 mg/dL ou > 7 nmol/L)' },
   { id: 'fr', label: 'Frequência respiratória ≥ 30' },
-  { id: 'pa', label: 'Pressão arterial baixa (PAS < 90 OU PAD ≤ 60)' },
+  { id: 'pa', label: 'Pressão arterial (PAS < 90 OU PAD ≤ 60)' },
   { id: 'idade', label: 'Idade ≥ 65 anos' },
 ];
 
